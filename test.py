@@ -25,7 +25,12 @@ def authenticate(pwValueToSubmit):
     cookie_File = "cookie-jar.txt"
     session.cookies = LWPCookieJar(cookie_File)
 
-    if not os.path.exists(cookie_File):
+    if os.path.exists(cookie_File):
+        session.cookies.load(cookie_File)
+
+    response = session.get('https://members-ng.iracing.com/data/car/get')
+
+    if response.status_code == 401:
         print('setting cookies')
         session.cookies.save()
         loginNow = session.post(loginAdress, json=authBody, headers=loginHeaders)
@@ -37,7 +42,6 @@ def authenticate(pwValueToSubmit):
             authenticated = True
         else:
             raise RuntimeError("Error from iRacing: ", response_Data)
-
     else:
         print('loading saved cookies')
         session.cookies.load(cookie_File)
