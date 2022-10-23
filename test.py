@@ -28,9 +28,9 @@ def authenticate(pwValueToSubmit):
     if os.path.exists(cookie_File):
         session.cookies.load(cookie_File)
 
-    response = session.get('https://members-ng.iracing.com/data/car/get')
+    responseStatusCode = session.get('https://members-ng.iracing.com/data/car/get').status_code
 
-    if response.status_code == 401:
+    if responseStatusCode == 401:
         print('setting cookies')
         session.cookies.save()
         loginNow = session.post(loginAdress, json=authBody, headers=loginHeaders)
