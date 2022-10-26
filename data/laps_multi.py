@@ -45,8 +45,12 @@ class LapsMulti:
             for record in laps_json:
                 if record["cust_id"] == driver:
                     value = record["lap_time"]
-                    seconds = self.convertTimeformatToSeconds(value)
-                    self.laps.append(seconds)
+                    if not record["lap_number"] == 0:
+                        seconds = self.convertTimeformatToSeconds(value)
+                        self.laps.append(seconds)
+                    else:
+                        self.laps.append(value)
+
             self.lapsCollection.append(self.laps)
 
         for x in self.lapsCollection:
@@ -56,4 +60,4 @@ class LapsMulti:
         if not laptime == -1:
             return laptime / 10000
         else:
-            return laptime
+            return None
