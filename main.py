@@ -1,14 +1,31 @@
 import requests
-from SessionBuilder import sessionBuilder
 
-my_sessionBuilder = sessionBuilder.SessionBuilder()
+from data.driver import Driver
+from data.laps_multi import LapsMulti
+from data.laps_single import LapsSingle
+from data.race import Race
+from data.recentrace import Recent_Race
+from sessionbuilder.session_builder import SessionBuilder
+
+my_sessionBuilder = SessionBuilder()
 my_sessionBuilder.authenticate()
 session = my_sessionBuilder.session
 
+#driver1 = Driver("Florian Niedermeier2", session)
+#cust_id = driver1.cust_id
 
-responseJson = session.get('https://members-ng.iracing.com/data/car/get')
-responseDict = responseJson.json()
-finalJson = requests.get(responseDict["link"])
-finalList = finalJson.json()
+#recentrace = Recent_Race(driver1, 0, session)
+subsession_id = 51015041
+#https://members.iracing.com/membersite/member/EventResult.do?subsessionid=51015041&custid=817320
 
-print(finalList[0]["car_name"])
+
+laps_multi = LapsMulti(subsession_id, session)
+#print(laps_single.laps)
+
+
+
+
+
+
+
+
