@@ -40,7 +40,6 @@ class LapsMulti:
                 "finish_position": None,
                 "laps": laps
             }
-
             self.lapsDict.append(intDict)
 
             for record in laps_json:

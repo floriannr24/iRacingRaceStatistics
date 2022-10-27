@@ -21,16 +21,16 @@ class BoxplotMulti:
 
     def draw(self):
 
-        xmin = 0    # 0
-        xmax = 13   # number of drivers
+        xmin = 0  # 0
+        xmax = 13  # number of drivers+1
 
-        ymax = 67.5   # 75percentile of worst? 75percentile of worst+number?
-        ymin = 64   # best overall lap
+        ymax = 67.5  # 75percentile of worst? 75percentile of worst+number?
+        ymin = 64  # best overall lap
         intervall = 0.5
 
-        number_of_seconds_shown = np.arange(ymin, ymax+intervall, intervall)
-        test = list(number_of_seconds_shown)
+        number_of_seconds_shown = np.arange(ymin, ymax + intervall, intervall)
 
+        test = list(number_of_seconds_shown)
         del test[::2]
 
         yticks = self.calculateMinutesYAxis(number_of_seconds_shown)
@@ -39,22 +39,39 @@ class BoxplotMulti:
         laps_clean1 = self.scanForInvalidTypes(laps_raw, -1)
         laps_clean2 = self.scanForInvalidTypes(laps_clean1, None)
 
+        # drivers_raw = self.extractDrivers(self.all_laptimes)
+        drivers_raw = ["driver 1",
+                       "driver 2",
+                       "driver 3",
+                       "driver 4",
+                       "driver 5",
+                       "driver 6",
+                       "driver 7",
+                       "driver 8",
+                       "driver 9",
+                       "driver 10",
+                       "driver 11",
+                       "driver 12"]
+
         median_per_lap = []
         mean_per_lap = []
         for laps in laps_clean2:
             if not not laps:
                 median_per_lap.append(statistics.median(laps))
                 mean_per_lap.append(statistics.mean(laps))
-        print("median " + (str(statistics.median(median_per_lap))))
-        print("mean " + str(statistics.mean(mean_per_lap)))
+        # print("median " + (str(statistics.median(median_per_lap))))
+        # print("mean " + str(statistics.mean(mean_per_lap)))
 
+        # drivers_raw = [404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404]
 
-
-
+        drivers_pos = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
         # formatting
         self.ax.set_yticks(number_of_seconds_shown)
+        self.ax.set_xticks(drivers_pos)
         self.ax.set_yticklabels(yticks)
+        self.ax.set_xticklabels([])
+
         # self.ax.set_ylabel("time in minutes", color="white")
         # self.ax.set_title("Race report", pad="20.0", color="white")
 
@@ -78,9 +95,17 @@ class BoxplotMulti:
                         whiskerprops=dict(color="#000000"),
                         capprops=dict(color="#000000"),
                         zorder=2,
-                        widths=0.6)
+                        widths=0.6
+                        )
 
         plt.show()
+
+    def extractDrivers(self, all_laptimes):
+
+        drivers = []
+        for lapdata in all_laptimes:
+            drivers.append(lapdata["driver"])
+        return drivers
 
     def extractLaptimes(self, all_laptimes):
 
