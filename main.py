@@ -5,6 +5,7 @@ from data.laps_multi import LapsMulti
 from data.laps_single import LapsSingle
 from data.race import Race
 from data.recentrace import Recent_Race
+from diagram.boxplot_multi import BoxplotMulti
 from sessionbuilder.session_builder import SessionBuilder
 
 my_sessionBuilder = SessionBuilder()
@@ -19,8 +20,22 @@ subsession_id = 51015041
 #https://members.iracing.com/membersite/member/EventResult.do?subsessionid=51015041&custid=817320
 
 
-laps_multi = LapsMulti(subsession_id, session)
-#print(laps_single.laps)
+lapsmulti = LapsMulti(subsession_id, session)
+
+# for laps in lapsmulti.lapsDict:
+#     print(laps)
+
+boxplotmulti = BoxplotMulti(lapsmulti.lapsDict)
+
+
+
+
+
+
+
+
+
+
 
 
 

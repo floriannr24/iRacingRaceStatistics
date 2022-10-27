@@ -1,15 +1,16 @@
 import json
 import requests
+import numpy
 
 
 class LapsMulti:
     def __init__(self, subsession_id, session):
         self.subsession_id = subsession_id
         self.session = session
-        self.number_of_records = None
-        self.laps = None
-        self.lapsCollection = None
-        self.requestLapsMulti(session)
+        self.lapsDict = self.requestLapsMulti(session)
+
+
+    # ToDo: actual number of laps -> fill missing laptimes with None
 
     def requestLapsMulti(self, session):
         # racesJson = session.get('https://members-ng.iracing.com/data/results/lap/chart/data', params={"subsession_id": self.subsession_id, "simsession_number": "0"})
@@ -22,39 +23,47 @@ class LapsMulti:
         # laps = requests.get(base_download_url+chunk_file_names).json()[0]
 
         ########## t e m p #########
-
         laps_json = json.load(
             open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/files/results_lap_chart_data_MULTIUSER.json"))
 
-        ######### t e m p #########
+        unique_drivers = self.findUniqueDrivers(laps_json)
 
-        self.number_of_records = len(laps_json)
+        return self.collectInfo(laps_json, unique_drivers)
 
-        unique_drivers = set()
-
-        for item in laps_json:
-            unique_drivers.add(item["cust_id"])
-
-        # ToDo: actual number of laps -> fill missing laptimes with None
-
-        self.lapsCollection = []
-
+    def collectInfo(self, laps_json, unique_drivers):
+        self.lapsDict = []
         for driver in unique_drivers:
-            self.laps = []
+
+            laps = []
+            intDict = {
+                "driver": driver,
+                "finish_position": None,
+                "laps": laps
+            }
+
+            self.lapsDict.append(intDict)
 
             for record in laps_json:
-                if record["cust_id"] == driver:
-                    value = record["lap_time"]
-                    if not record["lap_number"] == 0:
-                        seconds = self.convertTimeformatToSeconds(value)
-                        self.laps.append(seconds)
-                    else:
-                        self.laps.append(value)
+                if record["display_name"] == driver:
+                    seconds = self.cleanAndConvertLapTimes(record["lap_time"], record["lap_number"])
+                    intDict["laps"].append(seconds)
+        return self.lapsDict
 
-            self.lapsCollection.append(self.laps)
+    def findUniqueDrivers(self, laps_json):
+        unique_drivers = set()
+        for item in laps_json:
+            unique_drivers.add(item["display_name"])
+        return unique_drivers
 
-        for x in self.lapsCollection:
-            print(x)
+    def cleanAndConvertLapTimes(self, lap_time, lap_number):
+        if lap_number > 0:
+            if not lap_time == -1:
+                seconds = self.convertTimeformatToSeconds(lap_time)
+                return seconds
+            if lap_time == -1:
+                return None
+        else:
+            return lap_time
 
     def convertTimeformatToSeconds(self, laptime):
         if not laptime == -1:
