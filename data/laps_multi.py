@@ -28,6 +28,8 @@ class LapsMulti:
         unique_drivers = self.findUniqueDrivers(laps_json)
         lapsDict = self.collectInfo(laps_json, unique_drivers)
 
+        print(racesJson_final)
+
         return self.sortDictionary(self.lapsDict)
 
     def sortDictionary(self, lapsDict):
@@ -50,7 +52,9 @@ class LapsMulti:
                 "driver": driver,
                 "finish_position": None,
                 "laps_completed": None,
+                "class": None,
                 "laps": laps
+
             }
             self.lapsDict.append(intDict)
 

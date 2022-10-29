@@ -38,7 +38,7 @@ class SessionBuilder:
         responseStatusCode = self.session.get('https://members-ng.iracing.com/data/car/get').status_code
 
         if responseStatusCode == 401:
-            print('setting cookies')
+            print('[session_builder] setting cookies')
             self.session.cookies.save()
             loginNow = self.session.post(loginAdress, json=authBody, headers=loginHeaders)
             response_Data = loginNow.json()
@@ -49,5 +49,5 @@ class SessionBuilder:
             else:
                 raise RuntimeError("Error from iRacing: ", response_Data)
         else:
-            print('loading saved cookies')
+            print('[session_builder] loading saved cookies')
             self.session.cookies.load(cookie_File)

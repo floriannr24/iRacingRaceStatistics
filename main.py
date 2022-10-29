@@ -5,6 +5,7 @@ from data.laps_multi import LapsMulti
 from data.laps_single import LapsSingle
 from data.race import Race
 from data.recentrace import Recent_Race
+from data.fuzzwah import Fuzzwah
 from diagram.boxplot_multi import BoxplotMulti
 from helpers.configurator import Configurator
 from sessionbuilder.session_builder import SessionBuilder
@@ -17,9 +18,11 @@ session = my_sessionBuilder.session
 # cust_id = driver1.cust_id
 
 # recentrace = Recent_Race(driver1, 0, session)
-subsession_id = 50780911
-# https://members.iracing.com/membersite/member/EventResult.do?subsessionid=51015041&custid=817320
+
+subsession_id = 51599116
+
+fuzz = Fuzzwah(subsession_id)
 
 
-lapsmulti = LapsMulti(subsession_id, session)
-boxplotmulti = BoxplotMulti(lapsmulti.lapsDict)
+#lapsmulti = LapsMulti(subsession_id, session)
+#boxplotmulti = BoxplotMulti(lapsmulti.lapsDict)

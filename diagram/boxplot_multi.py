@@ -1,6 +1,8 @@
 import math
 import statistics
 from datetime import timedelta
+from decimal import Decimal, ROUND_HALF_DOWN
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -35,15 +37,6 @@ class BoxplotMulti:
         race_not_completed_clean_2 = self.scanForInvalidTypes(race_not_completed_clean_1, None)
 
         drivers_raw = self.extractDrivers(self.all_laptimes)
-
-        # median_per_lap = []
-        # mean_per_lap = []
-        # for laps in laps_clean2:
-        #     if not not laps:
-        #         median_per_lap.append(statistics.median(laps))
-        #         mean_per_lap.append(statistics.mean(laps))
-        # print("median " + (str(statistics.median(median_per_lap))))
-        # print("mean " + str(statistics.mean(mean_per_lap)))
 
         # self.ax.set_ylabel("time in minutes", color="white")
         # self.ax.set_title("Race report", pad="20.0", color="white")
@@ -112,25 +105,34 @@ class BoxplotMulti:
         tempMin = []
 
         for laps in lapdata_clean:
+
+            if not laps:
+                continue
+
             Q1, Q3 = np.percentile(laps, [25, 75])
             IQR = Q3 - Q1
 
             loval = Q1 - 1.5 * IQR
             hival = Q3 + 1.5 * IQR
 
-            print(hival)
-
-            tempMax.append(min(laps, key=lambda x: abs(x - hival)))
+            #find closest real laptime value compared to hival/loval
+            candidates_for_top_border = max([item for item in laps if item < hival])
+            tempMax.append(candidates_for_top_border)
             tempMin.append(min(laps, key=lambda x: abs(x - loval)))
 
-        minVal = math.trunc((min(tempMin)))  # bottom border
-        maxVal = (max(tempMax))  # top border
+        maxVal = max(tempMax)   # top border
+        minVal = min(tempMin)   # bottom border
 
-        # round min and max to nearest base (= roundBase)
-        result.append(roundBase * round(minVal / roundBase))
+        # round min to nearest base (= roundBase; 0.5)
+        minVal_test = roundBase * round(minVal / roundBase)
+
+        #if minVal has been rounded up, round down 0.5
+        if minVal_test > minVal:
+            minval_final = minVal_test-0.5
+            result.append(minval_final)
+        else:
+            result.append(minVal_test)
         result.append(roundBase * round(maxVal / roundBase))
-
-        print(result)
 
         return result
 
