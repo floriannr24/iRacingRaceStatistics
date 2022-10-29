@@ -1,3 +1,4 @@
+import math
 import statistics
 from datetime import timedelta
 import matplotlib.pyplot as plt
@@ -6,8 +7,13 @@ import numpy as np
 
 class BoxplotMulti:
     def __init__(self, all_laptimes):
+        self.ax = None
+        self.fig = None
         self.all_laptimes = all_laptimes
         self.racemetadata = None
+        self.px_width = 800
+        self.px_height = 600
+        self.numberOfDrivers = len(all_laptimes)
 
         # define color scheme
         self.ax_color = "#2F3136"
@@ -17,63 +23,41 @@ class BoxplotMulti:
         self.fig_color = "#36393F"
         self.draw()
 
-    fig, ax = plt.subplots(nrows=1, ncols=1)
 
     def draw(self):
 
-        xmin = 0  # 0
-        xmax = 13  # number of drivers+1
+        race_completed_raw = self.extractLaptimes(self.all_laptimes, True)
+        race_completed_clean_1 = self.scanForInvalidTypes(race_completed_raw, -1)
+        race_completed_clean_2 = self.scanForInvalidTypes(race_completed_clean_1, None)
 
-        ymax = 67.5  # 75percentile of worst? 75percentile of worst+number?
-        ymin = 64  # best overall lap
-        intervall = 0.5
+        race_not_completed_raw = self.extractLaptimes(self.all_laptimes, False)
+        race_not_completed_clean_1 = self.scanForInvalidTypes(race_not_completed_raw, -1)
+        race_not_completed_clean_2 = self.scanForInvalidTypes(race_not_completed_clean_1, None)
 
-        number_of_seconds_shown = np.arange(ymin, ymax + intervall, intervall)
+        drivers_raw = self.extractDrivers(self.all_laptimes)
 
-        test = list(number_of_seconds_shown)
-        del test[::2]
-
-        yticks = self.calculateMinutesYAxis(number_of_seconds_shown)
-
-        laps_raw = self.extractLaptimes(self.all_laptimes)
-        laps_clean1 = self.scanForInvalidTypes(laps_raw, -1)
-        laps_clean2 = self.scanForInvalidTypes(laps_clean1, None)
-
-        # drivers_raw = self.extractDrivers(self.all_laptimes)
-        drivers_raw = ["driver 1",
-                       "driver 2",
-                       "driver 3",
-                       "driver 4",
-                       "driver 5",
-                       "driver 6",
-                       "driver 7",
-                       "driver 8",
-                       "driver 9",
-                       "driver 10",
-                       "driver 11",
-                       "driver 12"]
-
-        median_per_lap = []
-        mean_per_lap = []
-        for laps in laps_clean2:
-            if not not laps:
-                median_per_lap.append(statistics.median(laps))
-                mean_per_lap.append(statistics.mean(laps))
+        # median_per_lap = []
+        # mean_per_lap = []
+        # for laps in laps_clean2:
+        #     if not not laps:
+        #         median_per_lap.append(statistics.median(laps))
+        #         mean_per_lap.append(statistics.mean(laps))
         # print("median " + (str(statistics.median(median_per_lap))))
         # print("mean " + str(statistics.mean(mean_per_lap)))
 
-        # drivers_raw = [404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404, 404]
-
-        drivers_pos = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-
-        # formatting
-        self.ax.set_yticks(number_of_seconds_shown)
-        self.ax.set_xticks(drivers_pos)
-        self.ax.set_yticklabels(yticks)
-        self.ax.set_xticklabels([])
-
         # self.ax.set_ylabel("time in minutes", color="white")
         # self.ax.set_title("Race report", pad="20.0", color="white")
+
+        xmin = 0  # 0
+        xmax = self.numberOfDrivers+1
+
+        maxmin = self.calculateYMaxMin(race_completed_clean_2, 0.5)
+        ymax = maxmin[1]
+        ymin = maxmin[0]
+
+        intervall = 0.5
+
+        self.fig, self.ax = plt.subplots(nrows=1, ncols=1, figsize=(self.px_width / 100, self.px_height / 100))
 
         # set colors
         self.ax.set_facecolor(self.ax_color)
@@ -87,7 +71,7 @@ class BoxplotMulti:
         self.fig.set_facecolor(self.fig_color)
         self.ax.set(xlim=(xmin, xmax), ylim=(ymin, ymax))
 
-        self.ax.boxplot(laps_clean2,
+        self.ax.boxplot(race_completed_clean_2,
                         patch_artist=True,
                         boxprops=dict(facecolor="#0084F2", color="#000000"),
                         flierprops=dict(markeredgecolor='#000000'),
@@ -98,7 +82,57 @@ class BoxplotMulti:
                         widths=0.6
                         )
 
+        self.ax.boxplot(race_not_completed_clean_2,
+                        patch_artist=True,
+                        boxprops=dict(facecolor="#6F6F6F", color="#000000"),
+                        flierprops=dict(markeredgecolor='#000000'),
+                        medianprops=dict(color="#000000"),
+                        whiskerprops=dict(color="#000000"),
+                        capprops=dict(color="#000000"),
+                        zorder=2,
+                        widths=0.6
+                        )
+
+        # formatting
+        number_of_seconds_shown = np.arange(ymin, ymax + intervall, intervall)
+        yticks = self.calculateMinutesYAxis(number_of_seconds_shown)
+        self.ax.set_yticks(number_of_seconds_shown)
+        self.ax.set_yticklabels(yticks)
+        self.ax.set_xticks(np.arange(1, len(self.all_laptimes)+1))
+        self.ax.set_xticklabels(drivers_raw, rotation=45, rotation_mode="anchor", ha="right")
+
+        plt.tight_layout()
+
         plt.show()
+
+    def calculateYMaxMin(self, lapdata_clean, roundBase):
+
+        result = []
+        tempMax = []
+        tempMin = []
+
+        for laps in lapdata_clean:
+            Q1, Q3 = np.percentile(laps, [25, 75])
+            IQR = Q3 - Q1
+
+            loval = Q1 - 1.5 * IQR
+            hival = Q3 + 1.5 * IQR
+
+            print(hival)
+
+            tempMax.append(min(laps, key=lambda x: abs(x - hival)))
+            tempMin.append(min(laps, key=lambda x: abs(x - loval)))
+
+        minVal = math.trunc((min(tempMin)))  # bottom border
+        maxVal = (max(tempMax))  # top border
+
+        # round min and max to nearest base (= roundBase)
+        result.append(roundBase * round(minVal / roundBase))
+        result.append(roundBase * round(maxVal / roundBase))
+
+        print(result)
+
+        return result
 
     def extractDrivers(self, all_laptimes):
 
@@ -107,15 +141,34 @@ class BoxplotMulti:
             drivers.append(lapdata["driver"])
         return drivers
 
-    def extractLaptimes(self, all_laptimes):
+    def extractLaptimes(self, all_laptimes, raceCompleted):
 
-        laps = []
-        for lapdata in all_laptimes:
-            laps.append(lapdata["laps"])
-        return laps
+        numberOfLapsInRace = all_laptimes[0]["laps_completed"]
+        numberOfDrivers = len(all_laptimes)
+
+        if raceCompleted:
+            laps = []
+            for lapdata in all_laptimes:
+                if lapdata["laps_completed"] == numberOfLapsInRace:
+                    laps.append(lapdata["laps"])
+                else:
+                    continue
+            return laps
+
+        else:
+            laps = []
+            for lapdata in all_laptimes:
+                if lapdata["laps_completed"] < numberOfLapsInRace:
+                    laps.append(lapdata["laps"])
+                else:
+                    continue
+
+            indicesToFillUp = numberOfDrivers - len(laps)
+            for i in range(indicesToFillUp):
+                laps.insert(0, "")
+            return laps
 
     def scanForInvalidTypes(self, all_laptimes, val):
-
         cleanLaps = []
         for laps in all_laptimes:
             cleanLaps.append([value for value in laps if value != val])
