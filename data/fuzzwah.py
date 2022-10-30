@@ -9,17 +9,15 @@ class Fuzzwah:
         self.username = self.getCredentials()["email"]
         self.password = self.getCredentials()["password"]
         self.cus_tId = self.getCredentials()["cust_id"]
-
-        irw = iRWebStats()
-        irw.login(username=self.username, password=self.password)
-        print(irw.cars_driven(custid=self.cus_tId))
-
+        self.irw = iRWebStats()
+        self.irw.login(username=self.username, password=self.password)
+        self.resultsSimple = self.requestResultsSimple()
 
     def getCredentials(self):
         return json.load(
             open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/sessionbuilder/files/credentials.json"))
 
+    def requestResultsSimple(self):
+        return self.irw.event_results(self.subsession_id)
 
-    def requestResultsSimple(self, session):
-        print("hello")
 

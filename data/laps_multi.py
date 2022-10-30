@@ -1,12 +1,13 @@
-import json
 import requests
-import numpy
+
+from data.fuzzwah import Fuzzwah
 
 
 class LapsMulti:
     def __init__(self, subsession_id, session):
         self.subsession_id = subsession_id
         self.session = session
+        self.fuzzResults = Fuzzwah(subsession_id)
         self.lapsDict = self.requestLapsMulti(session)
 
 
@@ -28,9 +29,7 @@ class LapsMulti:
         unique_drivers = self.findUniqueDrivers(laps_json)
         lapsDict = self.collectInfo(laps_json, unique_drivers)
 
-        print(racesJson_final)
-
-        return self.sortDictionary(self.lapsDict)
+        return self.sortDictionary(lapsDict)
 
     def sortDictionary(self, lapsDict):
         lapsDict = list(sorted(lapsDict, key=lambda p: p["finish_position"]))
@@ -43,7 +42,7 @@ class LapsMulti:
         return lapsDict
 
     def collectInfo(self, laps_json, unique_drivers):
-        self.lapsDict = []
+        lapsDict = []
         for driver in unique_drivers:
 
             laps = []
@@ -51,30 +50,34 @@ class LapsMulti:
             intDict = {
                 "driver": driver,
                 "finish_position": None,
+                "result_status": None,
                 "laps_completed": None,
-                "class": None,
+                "car": None,
                 "laps": laps
-
             }
-            self.lapsDict.append(intDict)
+            lapsDict.append(intDict)
 
+            # add "finish_position", "laps_completed" to intDict{} via FuzzwahAPI
             for record in laps_json:
                 if record["display_name"] == driver:
                     seconds = self.cleanAndConvertLapTimes(record["lap_time"], record["lap_number"])
                     laps_completed_pos.append(record["lap_position"])
                     intDict["laps"].append(seconds)
             intDict["finish_position"] = laps_completed_pos[len(laps_completed_pos) - 1]
-            intDict["laps_completed"] = len(laps_completed_pos)-1
+            intDict["laps_completed"] = len(laps_completed_pos) - 1
 
-        return self.lapsDict
+            # add "Running", "Disq" or "Disconnected" to intDict{} via FuzzwahAPI
+            for fuzz in self.fuzzResults.resultsSimple[1]:
+                if driver == fuzz["name"]:
+                    intDict["result_status"] = fuzz["out"]
+
+        return lapsDict
 
     def findUniqueDrivers(self, laps_json):
         unique_drivers = set()
         for item in laps_json:
             unique_drivers.add(item["display_name"])
         return unique_drivers
-
-    # def findFinishPosition(self, laps_json):
 
     def cleanAndConvertLapTimes(self, lap_time, lap_number):
         if lap_number > 0:
