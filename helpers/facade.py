@@ -3,24 +3,24 @@ from data.laps_multi import LapsMulti
 
 class Facade:
     def __init__(self, subession_Id, session):
-        self.requestedLaps = LapsMulti(subession_Id, session).lapsDict
+        self.inputLaps = LapsMulti(subession_Id, session).lapsDict
         self.outputLaps = self.get_boxplotMulti_Data()
 
     def get_boxplotMulti_Data(self):
         outputlaps = []
 
-        race_completed_raw = self.extractLaptimes(self.requestedLaps, True)
+        race_completed_raw = self.extractLaptimes(self.inputLaps, True)
         race_completed_clean = self.scanForInvalidTypes(race_completed_raw, -1, None)
 
-        race_not_completed_raw = self.extractLaptimes(self.requestedLaps, False)
+        race_not_completed_raw = self.extractLaptimes(self.inputLaps, False)
         race_not_completed_clean = self.scanForInvalidTypes(race_not_completed_raw, -1, None)
 
-        drivers_raw = self.extractDrivers(self.requestedLaps)
-        number_of_laps = self.numberOfLapsInRace(self.requestedLaps)
+        drivers = self.extractDrivers(self.inputLaps)
+        number_of_laps = self.numberOfLapsInRace(self.inputLaps)
 
         outputlaps.append(race_completed_clean)
         outputlaps.append(race_not_completed_clean)
-        outputlaps.append(drivers_raw)
+        outputlaps.append(drivers)
         outputlaps.append(number_of_laps)
 
         return outputlaps
@@ -34,33 +34,41 @@ class Facade:
 
     def extractDrivers(self, all_laptimes):
 
-        drivers = []
+        drivers_comp = []
+        drivers_notcomp = []
+
         for lapdata in all_laptimes:
-            drivers.append(lapdata["driver"])
-        return drivers
+            if lapdata["result_status"] == "Running":
+                drivers_comp.append(lapdata["driver"])
+            else:
+                drivers_notcomp.append(lapdata["driver"])
+
+        return drivers_comp + drivers_notcomp
 
     def extractLaptimes(self, all_laptimes, raceCompleted):
 
-        numberOfLapsInRace = all_laptimes[0]["laps_completed"]
         numberOfDrivers = len(all_laptimes)
+        drivers_raw = []
 
         if raceCompleted:
             laps = []
             for lapdata in all_laptimes:
                 if lapdata["result_status"] == "Running":
                     laps.append(lapdata["laps"])
+                    drivers_raw.append(lapdata["driver"])
                 else:
                     continue
             return laps
-
         else:
             laps = []
             for lapdata in all_laptimes:
                 if lapdata["result_status"] == "Disqualified" or lapdata["result_status"] == "Disconnected":
                     laps.append(lapdata["laps"])
+                    drivers_raw.append(lapdata["driver"])
                 else:
                     continue
 
+            # fill up indices, so laptimes for DISQ and DISC drivers are put to the last places in the diagram
             indicesToFillUp = numberOfDrivers - len(laps)
             for i in range(indicesToFillUp):
                 laps.insert(0, "")

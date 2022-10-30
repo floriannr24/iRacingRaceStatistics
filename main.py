@@ -18,7 +18,8 @@ session = my_sessionBuilder.session
 # driver1 = Driver("Florian Niedermeier2", session)
 # cust_id = driver1.cust_id
 
-subsession_id = 51012811
+subsession_id = 50965261
 
 fac = Facade(subsession_id, session)
+
 boxplotmulti = BoxplotMulti(fac.outputLaps)

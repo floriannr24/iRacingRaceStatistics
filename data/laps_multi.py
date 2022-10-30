@@ -10,7 +10,6 @@ class LapsMulti:
         self.fuzzResults = Fuzzwah(subsession_id)
         self.lapsDict = self.requestLapsMulti(session)
 
-
     def requestLapsMulti(self, session):
         racesJson = session.get('https://members-ng.iracing.com/data/results/lap_chart_data',
                                 params={"subsession_id": self.subsession_id, "simsession_number": "0"})
