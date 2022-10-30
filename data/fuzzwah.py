@@ -6,11 +6,12 @@ from ir_webstats_rc.client import iRWebStats
 class Fuzzwah:
     def __init__(self, subsession_id):
         self.subsession_id = subsession_id
-        self.username = self.getCredentials()["email"]
+        self.email = self.getCredentials()["email"]
         self.password = self.getCredentials()["password"]
-        self.cus_tId = self.getCredentials()["cust_id"]
+        self.cust_Id = self.getCredentials()["cust_id"]
+        self.username = self.getCredentials()["username"]
         self.irw = iRWebStats()
-        self.irw.login(username=self.username, password=self.password)
+        self.irw.login(username=self.email, password=self.password)
         self.resultsSimple = self.requestResultsSimple()
 
     def getCredentials(self):

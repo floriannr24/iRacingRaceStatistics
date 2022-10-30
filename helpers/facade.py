@@ -2,9 +2,10 @@ from data.laps_multi import LapsMulti
 
 
 class Facade:
-    def __init__(self, subession_Id, session):
+    def __init__(self, subession_Id, session, typeOfDiagram):
         self.inputLaps = LapsMulti(subession_Id, session).lapsDict
         self.outputLaps = self.get_boxplotMulti_Data()
+        self.typeOfDiagram = typeOfDiagram
 
     def get_boxplotMulti_Data(self):
         outputlaps = []
