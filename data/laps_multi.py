@@ -7,8 +7,11 @@ class LapsMulti:
     def __init__(self, subsession_id, session):
         self.subsession_id = subsession_id
         self.session = session
-        self.fuzzResults = Fuzzwah(subsession_id)
+        self.inputLaps = None
+        self.lapsJson = None
+        self.fuzzResults = Fuzzwah(subsession_id).resultsSimple[1]
         self.lapsDict = self.requestLapsMulti(session)
+
 
     def requestLapsMulti(self, session):
         racesJson = session.get('https://members-ng.iracing.com/data/results/lap_chart_data',
@@ -19,14 +22,16 @@ class LapsMulti:
         base_download_url = racesJson_final["chunk_info"]["base_download_url"]
         chunk_file_names = racesJson_final["chunk_info"]["chunk_file_names"][0]
 
-        laps_json = requests.get(base_download_url + chunk_file_names).json()
+        self.lapsJson = requests.get(base_download_url + chunk_file_names).json()
 
         ########## t e m p #########
-        # laps_json = json.load(
+        # self.inputLaps = json.load(
         #     open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/files/results_lap_chart_data_MULTIUSER.json"))
 
-        unique_drivers = self.findUniqueDrivers(laps_json)
-        lapsDict = self.collectInfo(laps_json, unique_drivers)
+        self.fuzzResults, self.inputLaps = self.filterByCar(67)
+
+        unique_drivers = self.findUniqueDrivers(self.inputLaps)
+        lapsDict = self.collectInfo(self.inputLaps, unique_drivers)
 
         return self.sortDictionary(lapsDict)
 
@@ -40,6 +45,32 @@ class LapsMulti:
 
         return lapsDict
 
+    def filterByCar(self, carIdToFilterFor):
+        fuzzNew = []
+        fuzzNew_drivers = []
+        inputNew = []
+
+        for results in self.fuzzResults:
+            if results["carid"] == carIdToFilterFor:
+                fuzzNew.append(results)
+                fuzzNew_drivers.append(results["name"])
+
+
+        for drivers in fuzzNew_drivers:
+            for lapdata in self.lapsJson:
+                if drivers == lapdata["display_name"]:
+                    inputNew.append(lapdata)
+
+        return fuzzNew, inputNew
+
+
+
+
+
+
+
+        return fuzzNew, inputNew
+
     def collectInfo(self, laps_json, unique_drivers):
         lapsDict = []
         for driver in unique_drivers:
@@ -51,12 +82,12 @@ class LapsMulti:
                 "finish_position": None,
                 "result_status": None,
                 "laps_completed": None,
-                "car": None,
+                "car_id": None,
                 "laps": laps
             }
             lapsDict.append(intDict)
 
-            # add "finish_position", "laps_completed" to intDict{} via FuzzwahAPI
+            # add "finish_position", "laps_completed" to intDict{} via requestLapsMulti()
             for record in laps_json:
                 if record["display_name"] == driver:
                     seconds = self.cleanAndConvertLapTimes(record["lap_time"], record["lap_number"])
@@ -66,9 +97,11 @@ class LapsMulti:
             intDict["laps_completed"] = len(laps_completed_pos) - 1
 
             # add "Running", "Disq" or "Disconnected" to intDict{} via FuzzwahAPI
-            for fuzz in self.fuzzResults.resultsSimple[1]:
+            # add "carId" to intDict{} via FuzzwahAPI
+            for fuzz in self.fuzzResults:
                 if driver == fuzz["name"]:
                     intDict["result_status"] = fuzz["out"]
+                    intDict["car_id"] = fuzz["car"]
 
         return lapsDict
 
