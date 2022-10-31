@@ -8,14 +8,14 @@ import numpy as np
 
 
 class BoxplotMulti:
-    def __init__(self, outputlaps):
+    def __init__(self, inputLaps):
         self.ax = None
         self.fig = None
-        self.race_completed_laps = outputlaps[0]
-        self.race_not_completed_laps = outputlaps[1]
-        self.drivers_raw = outputlaps[2]
-        self.number_Of_Drivers = len(outputlaps[2])
-        self.number_of_laps = outputlaps[3]
+        self.race_completed_laps = inputLaps[0]
+        self.race_not_completed_laps = inputLaps[1]
+        self.drivers_raw = inputLaps[2]
+        self.number_Of_Drivers = len(inputLaps[2])
+        self.number_of_laps = inputLaps[3]
 
         self.racemetadata = None
         self.px_width = 800

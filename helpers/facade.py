@@ -1,14 +1,31 @@
+from pip._internal.utils.misc import enum
+
 from data.laps_multi import LapsMulti
 
 
 class Facade:
-    def __init__(self, subession_Id, session, typeOfDiagram):
-        self.inputLaps = LapsMulti(subession_Id, session).lapsDict
-        self.outputLaps = self.get_boxplotMulti_Data()
-        self.typeOfDiagram = typeOfDiagram
+    def __init__(self, subession_Id, session):
+        self.subsession_id = subession_Id
+        self.session = session
+        self.inputLaps = None
+        self.inputSessionTimes = None
+        self.typeOfDiagram = None
+        self.get_Output(self.typeOfDiagram)
+
+    def get_Output(self, typeOfDiagram):
+        match typeOfDiagram:
+            case "bpm":
+                return self.get_boxplotMulti_Data()
+            # case "bps":
+            #   return self.get_boxplotSingle_Data()
+            case "delta":
+                return self.get_Delta_Data()
 
     def get_boxplotMulti_Data(self):
-        outputlaps = []
+
+        self.inputLaps = LapsMulti(self.subsession_id, self.session).lapsDict_BPM
+
+        output = []
 
         race_completed_raw = self.extractLaptimes(self.inputLaps, True)
         race_completed_clean = self.scanForInvalidTypes(race_completed_raw, -1, None)
@@ -19,12 +36,15 @@ class Facade:
         drivers = self.extractDrivers(self.inputLaps)
         number_of_laps = self.numberOfLapsInRace(self.inputLaps)
 
-        outputlaps.append(race_completed_clean)
-        outputlaps.append(race_not_completed_clean)
-        outputlaps.append(drivers)
-        outputlaps.append(number_of_laps)
+        output.append(race_completed_clean)
+        output.append(race_not_completed_clean)
+        output.append(drivers)
+        output.append(number_of_laps)
 
-        return outputlaps
+        return output
+
+    def get_Delta_Data(self):
+        self.inputSessionTimes = LapsMulti(self.subsession_id, self.session).lapsDict_Delta
 
     def numberOfLapsInRace(self, reqLaps):
         for driver in reqLaps:
@@ -83,6 +103,3 @@ class Facade:
         for laps in cleanLaps1:
             cleanLaps2.append([value for value in laps if value != arg2])
         return cleanLaps2
-
-
-

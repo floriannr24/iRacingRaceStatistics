@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Delta:
-    def __init__(self):
+    def __init__(self, inputLaps):
         self.ax_color = "#2F3136"
         self.fig_color = "#36393F"
         self.ax_gridlines_color = "#3F434A"
@@ -29,6 +29,7 @@ class Delta:
         ax.set_xlabel("laps", color="white")
         ax.set_ylabel("time in minutes", color="white")
         ax.set_title("Race report", pad="20.0", color="white")
+
 
         # set colors
         ax.set_facecolor(self.ax_color)
