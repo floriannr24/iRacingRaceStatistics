@@ -116,7 +116,7 @@ class BoxplotMulti:
         maxVal = max(tempMax)  # top border
         minVal = min(tempMin)  # bottom border
 
-        # round min to nearest base (= roundBase; 0.5)
+        # round min to the nearest base (= roundBase; 0.5)
         minVal_test = roundBase * round(minVal / roundBase)
 
         # if minVal has been rounded up, round down 0.5

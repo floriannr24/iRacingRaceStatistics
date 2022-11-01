@@ -46,6 +46,8 @@ class Facade:
     def get_Delta_Data(self):
         self.inputSessionTimes = LapsMulti(self.subsession_id, self.session).masterDelta()
 
+        return self.inputSessionTimes
+
     def numberOfLapsInRace(self, reqLaps):
         for driver in reqLaps:
             if driver["result_status"] == "Running":
@@ -89,7 +91,7 @@ class Facade:
                 else:
                     continue
 
-            # fill up indices, so laptimes for DISQ and DISC drivers are put to the last places in the diagram
+            # fill up indices, so DISQ and DISC drivers are put to the last places in the diagram
             indicesToFillUp = numberOfDrivers - len(laps)
             for i in range(indicesToFillUp):
                 laps.insert(0, "")

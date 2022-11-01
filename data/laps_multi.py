@@ -31,11 +31,13 @@ class LapsMulti:
         lapsDict = self.delta_collectInfo(self.inputLaps, unique_drivers)
         output_data = self.sortDictionary(lapsDict)
 
-        l1 = self.delta_calcDelta(output_data)
+        output_data = self.delta_calcDelta(output_data)
 
         return output_data
 
-    def requestLapsMulti(self,):
+    ####################################################################
+
+    def requestLapsMulti(self):
 
         load_success = False
 
@@ -74,6 +76,8 @@ class LapsMulti:
                 self.subsession_id) + "_results_lap_chart_data_MULTI.json", "w") as f:
             json.dump(self.lapsJson, f, indent=2)
         print("[laps_multi] Saved subsession \""+str(self.subsession_id)+ "\" to cache")
+
+    ####################################################################
 
     def convertTimeformatToSeconds(self, laptime):
         if not laptime == -1:
@@ -177,21 +181,21 @@ class LapsMulti:
 
     def delta_calcDelta(self, lapsDict):
 
-        deltaPerDriver = []
-
         for i in range(0, 6, 1):
 
-            deltaToFirst = []
+            intDelta = []
 
             for s in range(0, len(lapsDict[i]["session_time"]) - 1, 1):
                 delta = lapsDict[0]["session_time"][s] - lapsDict[i]["session_time"][s]
                 if not delta == 0:
                     delta = round(delta, 2) * (-1)
-                deltaToFirst.append(delta)
-            deltaPerDriver.append(deltaToFirst)
+                intDelta.append(delta)
+            lapsDict[i]["delta"] = intDelta
 
-        for deltaT in deltaPerDriver:
-            print(deltaT)
+        # for deltaT in deltaToFirst:
+        #     print(deltaT)
+
+        return lapsDict
 
     def delta_collectInfo(self, laps_json, unique_drivers):
         lapsDict = []
