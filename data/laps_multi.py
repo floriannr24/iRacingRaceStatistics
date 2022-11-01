@@ -1,3 +1,5 @@
+import json
+
 import requests
 from data.fuzzwah import Fuzzwah
 
@@ -13,52 +15,65 @@ class LapsMulti:
         self.lapsJson = None
         self.fuzzResults = fuzz.resultsSimple[1]
         self.carclassid = self.searchUsersCarClass(fuzz.username)
-        self.lapsDict_BPM = self.masterBoxPlotMulti()
-        self.lapsDict_Delta = self.masterDelta()
-
-    def requestLapsMulti(self, session):
-        racesJson = session.get('https://members-ng.iracing.com/data/results/lap_chart_data',
-                                params={"subsession_id": self.subsession_id, "simsession_number": "0"})
-        racesDict = racesJson.json()
-        racesJson_final = requests.get(racesDict["link"]).json()
-
-        base_download_url = racesJson_final["chunk_info"]["base_download_url"]
-        chunk_file_names = racesJson_final["chunk_info"]["chunk_file_names"][0]
-
-        self.lapsJson = requests.get(base_download_url + chunk_file_names).json()
-
-        ########## t e m p #########
-        # self.inputLaps = json.load(
-        #     open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/files/results_lap_chart_data_MULTIUSER.json"))
 
     def masterBoxPlotMulti(self):
-
-        self.requestLapsMulti(self.session)
-
+        self.requestLapsMulti()
         self.fuzzResults, self.inputLaps = self.filterByCarClass(self.carclassid)
-
         unique_drivers = self.findUniqueDrivers(self.inputLaps)
         lapsDict = self.bpm_collectInfo(self.inputLaps, unique_drivers)
 
         return self.sortDictionary(lapsDict)
 
     def masterDelta(self):
-
-        self.requestLapsMulti(self.session)
-
+        self.requestLapsMulti()
         self.fuzzResults, self.inputLaps = self.filterByCarClass(self.carclassid)
-
         unique_drivers = self.findUniqueDrivers(self.inputLaps)
-
         lapsDict = self.delta_collectInfo(self.inputLaps, unique_drivers)
+        output_data = self.sortDictionary(lapsDict)
 
-        lapsDict_final = self.sortDictionary(lapsDict)
+        l1 = self.delta_calcDelta(output_data)
 
-        l1 = self.delta_calcDelta(lapsDict_final)
+        return output_data
 
-        return lapsDict_final
+    def requestLapsMulti(self,):
 
-    ####################################################################
+        load_success = False
+
+        try:
+            self.lapsJson = self.cache_load()
+            load_success = True
+        except FileNotFoundError:
+            print('[laps_multi] File does not exist')
+
+        if not load_success:
+
+            print('[laps_multi] Requesting subsession from API...')
+
+            racesJson = self.session.get('https://members-ng.iracing.com/data/results/lap_chart_data',
+                                    params={"subsession_id": self.subsession_id, "simsession_number": "0"})
+            racesDict = racesJson.json()
+            racesJson_final = requests.get(racesDict["link"]).json()
+
+            base_download_url = racesJson_final["chunk_info"]["base_download_url"]
+            chunk_file_names = racesJson_final["chunk_info"]["chunk_file_names"][0]
+
+            self.lapsJson = requests.get(base_download_url + chunk_file_names).json()
+
+            self.cache_save()
+
+    def cache_load(self):
+        file = open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
+            self.subsession_id) + "_results_lap_chart_data_MULTI.json")
+        jsonFile = json.load(file)
+        file.close()
+        print("[laps_multi] Loaded subsession \""+str(self.subsession_id)+ "\" from cache")
+        return jsonFile
+
+    def cache_save(self):
+        with open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
+                self.subsession_id) + "_results_lap_chart_data_MULTI.json", "w") as f:
+            json.dump(self.lapsJson, f, indent=2)
+        print("[laps_multi] Saved subsession \""+str(self.subsession_id)+ "\" to cache")
 
     def convertTimeformatToSeconds(self, laptime):
         if not laptime == -1:
@@ -101,14 +116,14 @@ class LapsMulti:
         return unique_drivers
 
     def cleanAndConvertLapTimes(self, lap_time, lap_number):
-            if lap_number > 0:
-                if not lap_time == -1:
-                    seconds = self.convertTimeformatToSeconds(lap_time)
-                    return seconds
-                if lap_time == -1:
-                    return None
-            else:
-                return lap_time
+        if lap_number > 0:
+            if not lap_time == -1:
+                seconds = self.convertTimeformatToSeconds(lap_time)
+                return seconds
+            if lap_time == -1:
+                return None
+        else:
+            return lap_time
 
     def sortDictionary(self, lapsDict):
         lapsDict = list(sorted(lapsDict, key=lambda p: p["finish_position"]))
@@ -168,20 +183,15 @@ class LapsMulti:
 
             deltaToFirst = []
 
-            for s in range(0, len(lapsDict[i]["session_time"])-1, 1):
+            for s in range(0, len(lapsDict[i]["session_time"]) - 1, 1):
                 delta = lapsDict[0]["session_time"][s] - lapsDict[i]["session_time"][s]
                 if not delta == 0:
-                    delta = round(delta, 2)*(-1)
+                    delta = round(delta, 2) * (-1)
                 deltaToFirst.append(delta)
             deltaPerDriver.append(deltaToFirst)
 
         for deltaT in deltaPerDriver:
             print(deltaT)
-
-
-
-
-
 
     def delta_collectInfo(self, laps_json, unique_drivers):
         lapsDict = []
@@ -219,5 +229,3 @@ class LapsMulti:
                     intDict["result_status"] = fuzz["out"]
 
         return lapsDict
-
-

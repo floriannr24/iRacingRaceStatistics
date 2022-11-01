@@ -23,7 +23,7 @@ class Facade:
 
     def get_boxplotMulti_Data(self):
 
-        self.inputLaps = LapsMulti(self.subsession_id, self.session).lapsDict_BPM
+        self.inputLaps = LapsMulti(self.subsession_id, self.session).masterBoxPlotMulti()
 
         output = []
 
@@ -44,7 +44,7 @@ class Facade:
         return output
 
     def get_Delta_Data(self):
-        self.inputSessionTimes = LapsMulti(self.subsession_id, self.session).lapsDict_Delta
+        self.inputSessionTimes = LapsMulti(self.subsession_id, self.session).masterDelta()
 
     def numberOfLapsInRace(self, reqLaps):
         for driver in reqLaps:
