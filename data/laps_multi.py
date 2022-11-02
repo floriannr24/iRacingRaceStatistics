@@ -7,14 +7,13 @@ from data.fuzzwah import Fuzzwah
 class LapsMulti:
     def __init__(self, subsession_id, session):
 
-        fuzz = Fuzzwah(subsession_id)
-
         self.subsession_id = subsession_id
         self.session = session
         self.inputLaps = None
         self.lapsJson = None
-        self.fuzzResults = fuzz.resultsSimple[1]
-        self.carclassid = self.searchUsersCarClass(fuzz.username)
+        self.fuzzResults = None
+        self.carclassid = None
+        self.fuzzInstance = None
 
     def masterBoxPlotMulti(self):
         self.requestLapsMulti()
@@ -25,12 +24,15 @@ class LapsMulti:
         return self.sortDictionary(lapsDict)
 
     def masterDelta(self):
+
         self.requestLapsMulti()
+
+        self.carclassid = self.searchUsersCarClass(self.fuzzInstance.username)
+
         self.fuzzResults, self.inputLaps = self.filterByCarClass(self.carclassid)
         unique_drivers = self.findUniqueDrivers(self.inputLaps)
         lapsDict = self.delta_collectInfo(self.inputLaps, unique_drivers)
         output_data = self.sortDictionary(lapsDict)
-
         output_data = self.delta_calcDelta(output_data)
 
         return output_data
@@ -42,15 +44,21 @@ class LapsMulti:
         load_success = False
 
         try:
-            self.lapsJson = self.cache_load()
+            self.initFuzzwah()
+            self.lapsJson, self.fuzzResults = self.cache_load()
             load_success = True
         except FileNotFoundError:
-            print('[laps_multi] File does not exist')
+            print('[laps_multi] Files do not exist')
 
         if not load_success:
 
-            print('[laps_multi] Requesting subsession from API...')
+            print('[laps_multi] Requesting subsession from iRacing API and Fuzzwah...')
 
+            #Fuzzwah
+            self.initFuzzwah()
+            self.fuzzResults = self.fuzzInstance.requestResultsSimple()[1]
+
+            #iRacingAPI
             racesJson = self.session.get('https://members-ng.iracing.com/data/results/lap_chart_data',
                                     params={"subsession_id": self.subsession_id, "simsession_number": "0"})
             racesDict = racesJson.json()
@@ -64,18 +72,34 @@ class LapsMulti:
             self.cache_save()
 
     def cache_load(self):
-        file = open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
+        fileAPI = open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
             self.subsession_id) + "_results_lap_chart_data_MULTI.json")
-        jsonFile = json.load(file)
-        file.close()
+        APIFile = json.load(fileAPI)
+        fileAPI.close()
+
+        fileFuzz = open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
+            self.subsession_id) + "_fuzzwah.json")
+        fuzzFile = json.load(fileFuzz)
+        fileFuzz.close()
+
         print("[laps_multi] Loaded subsession \""+str(self.subsession_id)+ "\" from cache")
-        return jsonFile
+
+        return APIFile, fuzzFile
 
     def cache_save(self):
         with open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
-                self.subsession_id) + "_results_lap_chart_data_MULTI.json", "w") as f:
-            json.dump(self.lapsJson, f, indent=2)
+                self.subsession_id) + "_results_lap_chart_data_MULTI.json", "w") as a:
+            json.dump(self.lapsJson, a, indent=2)
+
+        with open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
+                self.subsession_id) + "_fuzzwah.json", "w") as f:
+            json.dump(self.fuzzResults, f, indent=2)
+
         print("[laps_multi] Saved subsession \""+str(self.subsession_id)+ "\" to cache")
+
+    def initFuzzwah(self):
+        self.fuzzInstance = Fuzzwah(self.subsession_id)
+
 
     ####################################################################
 
@@ -86,6 +110,7 @@ class LapsMulti:
             return None
 
     def searchUsersCarClass(self, username):
+
         carclassid = None
         for results in self.fuzzResults:
             if results["name"] == username:
@@ -181,19 +206,16 @@ class LapsMulti:
 
     def delta_calcDelta(self, lapsDict):
 
-        for i in range(0, 6, 1):
+        for i in range(0, len(lapsDict), 1):
 
             intDelta = []
 
-            for s in range(0, len(lapsDict[i]["session_time"]) - 1, 1):
+            for s in range(0, len(lapsDict[i]["session_time"]), 1):
                 delta = lapsDict[0]["session_time"][s] - lapsDict[i]["session_time"][s]
                 if not delta == 0:
                     delta = round(delta, 2) * (-1)
                 intDelta.append(delta)
             lapsDict[i]["delta"] = intDelta
-
-        # for deltaT in deltaToFirst:
-        #     print(deltaT)
 
         return lapsDict
 

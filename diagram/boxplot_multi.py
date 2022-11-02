@@ -126,7 +126,6 @@ class BoxplotMulti:
         else:
             result.append(minVal_test)
         result.append(roundBase * round(maxVal / roundBase))
-
         return result
 
     def calculateMinutesYAxis(self, number_of_seconds_shown):

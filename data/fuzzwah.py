@@ -8,17 +8,16 @@ class Fuzzwah:
         self.subsession_id = subsession_id
         self.email = self.getCredentials()["email"]
         self.password = self.getCredentials()["password"]
-        self.cust_Id = self.getCredentials()["cust_id"]
+        self.cust_id = self.getCredentials()["cust_id"]
         self.username = self.getCredentials()["username"]
-        self.irw = iRWebStats()
-        self.irw.login(username=self.email, password=self.password)
-        self.resultsSimple = self.requestResultsSimple()
 
     def getCredentials(self):
         return json.load(
             open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/sessionbuilder/files/credentials.json"))
 
     def requestResultsSimple(self):
-        return self.irw.event_results(self.subsession_id)
+        irw = iRWebStats()
+        irw.login(username=self.email, password=self.password)
+        return irw.event_results(self.subsession_id)
 
 

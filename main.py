@@ -19,8 +19,9 @@ session = my_sessionBuilder.session
 # driver1 = Driver("Florian Niedermeier2", session)
 # cust_id = driver1.cust_id
 
-subsession_id = 52007080
+subsession_id = 51367352
 fac = Facade(subsession_id, session)
 
 #boxplotmulti = BoxplotMulti(fac.get_Output("bpm"))
+
 delta = Delta(fac.get_Output("delta"))
