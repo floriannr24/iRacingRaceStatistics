@@ -17,6 +17,8 @@ class LapsMulti:
 
     def masterBoxPlotMulti(self):
         self.requestLapsMulti()
+        self.carclassid = self.searchUsersCarClass(self.fuzzInstance.username)
+
         self.fuzzResults, self.inputLaps = self.filterByCarClass(self.carclassid)
         unique_drivers = self.findUniqueDrivers(self.inputLaps)
         lapsDict = self.bpm_collectInfo(self.inputLaps, unique_drivers)
@@ -24,16 +26,18 @@ class LapsMulti:
         return self.sortDictionary(lapsDict)
 
     def masterDelta(self):
-
         self.requestLapsMulti()
-
         self.carclassid = self.searchUsersCarClass(self.fuzzInstance.username)
 
         self.fuzzResults, self.inputLaps = self.filterByCarClass(self.carclassid)
         unique_drivers = self.findUniqueDrivers(self.inputLaps)
         lapsDict = self.delta_collectInfo(self.inputLaps, unique_drivers)
         output_data = self.sortDictionary(lapsDict)
+        output_data = self.delta_find_DISQ_DISC(output_data)
         output_data = self.delta_calcDelta(output_data)
+
+        for data in self.delta_calcDelta(output_data):
+            print(data)
 
         return output_data
 
@@ -255,3 +259,22 @@ class LapsMulti:
                     intDict["result_status"] = fuzz["out"]
 
         return lapsDict
+
+    def delta_find_DISQ_DISC(self, all_laptimes):
+
+        finished = []
+        disq_disc = []
+
+        for lapdata in all_laptimes:
+            if lapdata["result_status"] == "Running":
+                finished.append(lapdata)
+            else:
+                continue
+
+        for lapdata in all_laptimes:
+            if lapdata["result_status"] == "Disqualified" or lapdata["result_status"] == "Disconnected":
+                disq_disc.append(lapdata)
+            else:
+                continue
+
+        return finished + disq_disc
