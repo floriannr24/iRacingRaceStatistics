@@ -36,9 +36,6 @@ class LapsMulti:
         output_data = self.delta_find_DISQ_DISC(output_data)
         output_data = self.delta_calcDelta(output_data)
 
-        for data in self.delta_calcDelta(output_data):
-            print(data)
-
         return output_data
 
     ####################################################################

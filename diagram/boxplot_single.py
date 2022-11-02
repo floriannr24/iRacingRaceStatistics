@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 import matplotlib.pyplot as plt
 import numpy as np
 
-
+#todo: compare against past events
 class BoxplotSingle:
     def __init__(self, y_values):
         self.y_values = y_values

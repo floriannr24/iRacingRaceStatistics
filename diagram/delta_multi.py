@@ -8,8 +8,10 @@ from matplotlib import cm
 from matplotlib.colors import Normalize
 from numpy import linspace
 
+# ToDo: select only a handful of players for comparison
 
-class Delta():
+
+class DeltaMulti:
     def __init__(self, input):
         self.ax_color = "#2F3136"
         self.fig_color = "#36393F"
@@ -48,7 +50,7 @@ class Delta():
         for i in range(3, len(self.input), 1):
             ax.plot(self.input[i]["delta"])
 
-        bottom_border = 5 * round(self.calculateYMin() * 2 / 5)
+        bottom_border = 5 * round(self.calculateYMin() * 1.5 / 5)
 
         # formatting
         ax.set(xlim=(-0.5, self.number_of_laps - 0.5), ylim=(-5, bottom_border))
@@ -58,7 +60,7 @@ class Delta():
         ax.set_ylabel("Cumulative gap to leader in seconds", color="white")
         # ax.set_title("Race report", pad="20.0", color="white")
         ax.legend(self.extractDrivers(), loc="center left", facecolor="#36393F", labelcolor="white",
-                  bbox_to_anchor=(1.05, 0.5), labelspacing=0.7, edgecolor="#7D8A93")
+                  bbox_to_anchor=(1.05, 0.5), labelspacing=0.5, edgecolor="#7D8A93")
         ax.invert_yaxis()
         plt.tick_params(labelright=True)
 

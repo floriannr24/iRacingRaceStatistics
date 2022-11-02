@@ -6,7 +6,8 @@ from decimal import Decimal, ROUND_HALF_DOWN
 import matplotlib.pyplot as plt
 import numpy as np
 
-
+#todo: mark own player name as fat
+#todo: iRating next to names?
 class BoxplotMulti:
     def __init__(self, inputLaps):
         self.ax = None
