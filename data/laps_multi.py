@@ -25,15 +25,16 @@ class LapsMulti:
 
         return self.sortDictionary(lapsDict)
 
-    def masterDelta(self):
+    def masterDelta(self, beforeDrivers, afterDrivers):
         self.requestLapsMulti()
         self.carclassid = self.searchUsersCarClass(self.fuzzInstance.username)
 
         self.fuzzResults, self.inputLaps = self.filterByCarClass(self.carclassid)
         unique_drivers = self.findUniqueDrivers(self.inputLaps)
-        lapsDict = self.delta_collectInfo(self.inputLaps, unique_drivers)
-        output_data = self.sortDictionary(lapsDict)
+        output_data = self.delta_collectInfo(self.inputLaps, unique_drivers)
+        output_data = self.sortDictionary(output_data)
         output_data = self.delta_find_DISQ_DISC(output_data)
+        output_data = self.delta_filterDrivers(output_data, beforeDrivers, afterDrivers)
         output_data = self.delta_calcDelta(output_data)
 
         return output_data
@@ -52,16 +53,15 @@ class LapsMulti:
             print('[laps_multi] Files do not exist')
 
         if not load_success:
-
             print('[laps_multi] Requesting subsession from iRacing API and Fuzzwah...')
 
-            #Fuzzwah
+            # Fuzzwah
             self.initFuzzwah()
             self.fuzzResults = self.fuzzInstance.requestResultsSimple()[1]
 
-            #iRacingAPI
+            # iRacingAPI
             racesJson = self.session.get('https://members-ng.iracing.com/data/results/lap_chart_data',
-                                    params={"subsession_id": self.subsession_id, "simsession_number": "0"})
+                                         params={"subsession_id": self.subsession_id, "simsession_number": "0"})
             racesDict = racesJson.json()
             racesJson_final = requests.get(racesDict["link"]).json()
 
@@ -83,7 +83,7 @@ class LapsMulti:
         fuzzFile = json.load(fileFuzz)
         fileFuzz.close()
 
-        print("[laps_multi] Loaded subsession \""+str(self.subsession_id)+ "\" from cache")
+        print("[laps_multi] Loaded subsession \"" + str(self.subsession_id) + "\" from cache")
 
         return APIFile, fuzzFile
 
@@ -96,11 +96,10 @@ class LapsMulti:
                 self.subsession_id) + "_fuzzwah.json", "w") as f:
             json.dump(self.fuzzResults, f, indent=2)
 
-        print("[laps_multi] Saved subsession \""+str(self.subsession_id)+ "\" to cache")
+        print("[laps_multi] Saved subsession \"" + str(self.subsession_id) + "\" to cache")
 
     def initFuzzwah(self):
         self.fuzzInstance = Fuzzwah(self.subsession_id)
-
 
     ####################################################################
 
@@ -275,3 +274,44 @@ class LapsMulti:
                 continue
 
         return finished + disq_disc
+
+    def delta_filterDrivers(self, data, beforeDrivers, afterDrivers):
+        name = self.fuzzInstance.username
+
+
+
+        if ((beforeDrivers or afterDrivers) == None) or ((beforeDrivers or afterDrivers) == 0):
+            return data
+        else:
+
+            foundData = []
+            foundIndex = 0
+
+            # searching current driver
+            for x in range(0, len(data), 1):
+                if data[x]["driver"] == name:
+                    foundIndex = x
+
+            up_down = 1
+
+            # adding driver - 1, then driver + 1, then driver -2, +2, -3, +3 to new list
+            for i in range(0, beforeDrivers+1, 1):
+                if i == 0:
+                    foundData.append(data[foundIndex])
+                else:
+                    foundData.insert(0, data[foundIndex-up_down])
+                    up_down += 1
+
+        for data in foundData:
+            print(data)
+
+
+        return foundData
+
+
+
+
+
+
+
+

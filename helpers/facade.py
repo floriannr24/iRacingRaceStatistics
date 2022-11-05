@@ -9,17 +9,15 @@ class Facade:
         self.session = session
         self.inputLaps = None
         self.inputSessionTimes = None
-        self.typeOfDiagram = None
-        self.get_Output(self.typeOfDiagram)
 
     def get_Output(self, typeOfDiagram):
-        match typeOfDiagram:
+        match typeOfDiagram[2]:
             case "bpm":
                 return self.get_boxplotMulti_Data()
             # case "bps":
             #   return self.get_boxplotSingle_Data()
             case "delta":
-                return self.get_Delta_Data()
+                return self.get_Delta_Data(typeOfDiagram[0], typeOfDiagram[1])
 
     def get_boxplotMulti_Data(self):
 
@@ -43,10 +41,8 @@ class Facade:
 
         return output
 
-    def get_Delta_Data(self):
-        self.inputSessionTimes = LapsMulti(self.subsession_id, self.session).masterDelta()
-
-        return self.inputSessionTimes
+    def get_Delta_Data(self, beforeDrivers, afterDrivers):
+        return LapsMulti(self.subsession_id, self.session).masterDelta(beforeDrivers, afterDrivers)
 
     def numberOfLapsInRace(self, reqLaps):
         for driver in reqLaps:
