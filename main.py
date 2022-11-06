@@ -1,11 +1,3 @@
-import requests
-
-from data.driver import Driver
-from data.laps_multi import LapsMulti
-from data.laps_single import LapsSingle
-from data.race import Race
-from data.recentrace import Recent_Race
-from data.fuzzwah import Fuzzwah
 from diagram.boxplot_multi import BoxplotMulti
 from diagram.delta_multi import DeltaMulti
 from helpers.configurator import Configurator
@@ -22,7 +14,7 @@ session = my_sessionBuilder.session
 
 subsession_id = 52132278
 fac = Facade(subsession_id, session)
-config = Configurator(None, None, "bpm")
+config = Configurator(None, None, "delta")
 
-#delta = DeltaMulti(fac.get_Output(config.data))
-boxplotmulti = BoxplotMulti(fac.get_Output(config.data))
+delta = DeltaMulti(fac.get_Output(config.data))
+#boxplotmulti = BoxplotMulti(fac.get_Output(config.data))

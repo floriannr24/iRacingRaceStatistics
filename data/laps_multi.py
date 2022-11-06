@@ -155,14 +155,15 @@ class LapsMulti:
             return lap_time
 
     def sortDictionary(self, lapsDict):
-        lapsDict = list(sorted(lapsDict, key=lambda p: p["finish_position"]))
+        secSortDict = list(sorted(lapsDict, key=lambda p: p["finish_position"])) # secondary sort by key "finish_position"
+        primSortDict = list(sorted(secSortDict, key=lambda p: p["laps_completed"], reverse=True))  # primary sort by key "laps_completed", descending
 
-        for lapdata in lapsDict:
+        for lapdata in primSortDict:
             if lapdata["finish_position"] == 0:
                 lapsDict.remove(lapdata)
                 lapsDict.append(lapdata)
 
-        return lapsDict
+        return primSortDict
 
     ####################################################################
     def bpm_collectInfo(self, laps_json, unique_drivers):
@@ -278,8 +279,6 @@ class LapsMulti:
     def delta_filterDrivers(self, data, beforeDrivers, afterDrivers):
         name = self.fuzzInstance.username
 
-
-
         if ((beforeDrivers or afterDrivers) == None) or ((beforeDrivers or afterDrivers) == 0):
             return data
         else:
@@ -295,23 +294,14 @@ class LapsMulti:
             up_down = 1
 
             # adding driver - 1, then driver + 1, then driver -2, +2, -3, +3 to new list
-            for i in range(0, beforeDrivers+1, 1):
+            for i in range(0, beforeDrivers + 1, 1):
                 if i == 0:
                     foundData.append(data[foundIndex])
                 else:
-                    foundData.insert(0, data[foundIndex-up_down])
+                    foundData.insert(0, data[foundIndex - up_down])
                     up_down += 1
 
         for data in foundData:
             print(data)
 
-
         return foundData
-
-
-
-
-
-
-
-
