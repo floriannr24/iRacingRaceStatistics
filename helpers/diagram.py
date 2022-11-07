@@ -1,23 +1,27 @@
 from pip._internal.utils.misc import enum
 
 from data.laps_multi import LapsMulti
+from diagram.boxplot_multi import BoxplotMulti
+from diagram.delta_multi import DeltaMulti
 
 
-class Facade:
-    def __init__(self, subession_Id, session):
-        self.subsession_id = subession_Id
+class Diagram:
+    def __init__(self, subession_id, session, config):
+        self.subsession_id = subession_id
         self.session = session
+        self.config = config.data
         self.inputLaps = None
         self.inputSessionTimes = None
+        self.get_Output()
 
-    def get_Output(self, typeOfDiagram):
-        match typeOfDiagram[2]:
+    def get_Output(self):
+        match self.config[2]:
             case "bpm":
                 return self.get_boxplotMulti_Data()
             # case "bps":
             #   return self.get_boxplotSingle_Data()
             case "delta":
-                return self.get_Delta_Data(typeOfDiagram[0], typeOfDiagram[1])
+                return self.get_Delta_Data(self.config[0], self.config[1])
 
     def get_boxplotMulti_Data(self):
 
@@ -39,10 +43,11 @@ class Facade:
         output.append(drivers)
         output.append(number_of_laps)
 
-        return output
+        return BoxplotMulti(output)
 
     def get_Delta_Data(self, beforeDrivers, afterDrivers):
-        return LapsMulti(self.subsession_id, self.session).masterDelta(beforeDrivers, afterDrivers)
+        output = LapsMulti(self.subsession_id, self.session).masterDelta(beforeDrivers, afterDrivers)
+        return DeltaMulti(output)
 
     def numberOfLapsInRace(self, reqLaps):
         for driver in reqLaps:

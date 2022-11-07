@@ -1,4 +1,4 @@
-from helpers.facade import Facade
+from helpers.diagram import Diagram
 
 
 class Configurator:
