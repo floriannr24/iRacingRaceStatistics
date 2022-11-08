@@ -1,12 +1,6 @@
 import statistics
-from datetime import timedelta
-import random
-
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import cm
-from matplotlib.colors import Normalize
-from numpy import linspace
 
 from diagram.diagram_base import DiagramBase
 

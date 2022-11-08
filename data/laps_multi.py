@@ -1,5 +1,4 @@
 import json
-
 import requests
 from data.fuzzwah import Fuzzwah
 
@@ -65,10 +64,13 @@ class LapsMulti:
             racesDict = racesJson.json()
             racesJson_final = requests.get(racesDict["link"]).json()
 
+
             base_download_url = racesJson_final["chunk_info"]["base_download_url"]
             chunk_file_names = racesJson_final["chunk_info"]["chunk_file_names"][0]
 
             self.lapsJson = requests.get(base_download_url + chunk_file_names).json()
+
+
 
             self.cache_save()
 
