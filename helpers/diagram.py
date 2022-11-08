@@ -43,11 +43,11 @@ class Diagram:
         output.append(drivers)
         output.append(number_of_laps)
 
-        return BoxplotMulti(output)
+        return BoxplotMulti(output, 800, 600)
 
     def get_Delta_Data(self, beforeDrivers, afterDrivers):
         output = LapsMulti(self.subsession_id, self.session).masterDelta(beforeDrivers, afterDrivers)
-        return DeltaMulti(output)
+        return DeltaMulti(output, 950, 600)
 
     def numberOfLapsInRace(self, reqLaps):
         for driver in reqLaps:

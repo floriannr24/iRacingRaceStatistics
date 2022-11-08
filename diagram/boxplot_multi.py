@@ -1,33 +1,20 @@
-import math
-import statistics
 from datetime import timedelta
-from decimal import Decimal, ROUND_HALF_DOWN
-
 import matplotlib.pyplot as plt
 import numpy as np
 
-#todo: mark own player name as fat
-#todo: iRating next to names?
-class BoxplotMulti:
-    def __init__(self, inputLaps):
-        self.ax = None
-        self.fig = None
-        self.race_completed_laps = inputLaps[0]
-        self.race_not_completed_laps = inputLaps[1]
-        self.drivers_raw = inputLaps[2]
-        self.number_Of_Drivers = len(inputLaps[2])
-        self.number_of_laps = inputLaps[3]
+from diagram.diagram_base import DiagramBase
 
-        self.racemetadata = None
-        self.px_width = 800
-        self.px_height = 600
 
-        # define color scheme
-        self.ax_color = "#2F3136"
-        self.ax_gridlines_color = "#3F434A"
-        self.ax_spines_color = "#3F434A"
-        self.ax_tick_color = "#C8CBD0"
-        self.fig_color = "#36393F"
+# todo: mark own player name as fat
+# todo: iRating next to names?
+
+class BoxplotMulti(DiagramBase):
+    def __init__(self, input, px_width, px_height):
+        super().__init__(input, px_width, px_height)
+        self.race_completed_laps = input[0]
+        self.race_not_completed_laps = input[1]
+        self.drivers_raw = input[2]
+        self.number_Of_Drivers = len(input[2])
         self.draw()
 
     def draw(self):
@@ -35,7 +22,7 @@ class BoxplotMulti:
         # self.ax.set_ylabel("time in minutes", color="white")
         # self.ax.set_title("Race report", pad="20.0", color="white")
 
-        xmin = 0  # 0
+        xmin = 0
         xmax = self.number_Of_Drivers + 1
 
         maxmin = self.calculateYMaxMin(self.race_completed_laps, 0.5)
@@ -43,20 +30,6 @@ class BoxplotMulti:
         ymin = maxmin[0]
 
         intervall = 0.5
-
-        self.fig, self.ax = plt.subplots(nrows=1, ncols=1, figsize=(self.px_width / 100, self.px_height / 100))
-
-        # set colors
-        self.ax.set_facecolor(self.ax_color)
-        self.ax.grid(color=self.ax_gridlines_color, axis="y", zorder=0)
-        self.ax.spines["left"].set_color(self.ax_spines_color)
-        self.ax.spines["bottom"].set_color(self.ax_spines_color)
-        self.ax.spines["right"].set_color(self.ax_spines_color)
-        self.ax.spines["top"].set_color(self.ax_spines_color)
-        self.ax.tick_params(axis="x", colors=self.ax_tick_color)
-        self.ax.tick_params(axis="y", colors=self.ax_tick_color)
-        self.fig.set_facecolor(self.fig_color)
-        self.ax.set(xlim=(xmin, xmax), ylim=(ymin, ymax))
 
         self.ax.boxplot(self.race_completed_laps,
                         patch_artist=True,
@@ -83,13 +56,13 @@ class BoxplotMulti:
         # formatting
         number_of_seconds_shown = np.arange(ymin, ymax + intervall, intervall)
 
+        self.ax.set(xlim=(xmin, xmax), ylim=(ymin, ymax))
         self.ax.set_yticks(number_of_seconds_shown)
         self.ax.set_yticklabels(self.calculateMinutesYAxis(number_of_seconds_shown))
-        self.ax.set_xticks(np.arange(1, self.number_Of_Drivers+1))
+        self.ax.set_xticks(np.arange(1, self.number_Of_Drivers + 1))
         self.ax.set_xticklabels(self.drivers_raw, rotation=45, rotation_mode="anchor", ha="right")
 
         plt.tight_layout()
-
         plt.show()
 
     def calculateYMaxMin(self, lapdata, roundBase):

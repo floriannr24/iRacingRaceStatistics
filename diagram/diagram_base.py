@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 
 class DiagramBase:
 
-    def __init__(self, px_width, px_height, input):
+    def __init__(self, input, px_width, px_height):
         self.input = input
         self.fig, self.ax = plt.subplots(nrows=1, ncols=1, figsize=(px_width / 100, px_height / 100))
 
@@ -14,7 +14,6 @@ class DiagramBase:
         self.ax_tick_color = "#C8CBD0"
         self.fig_color = "#36393F"
 
-        # set colors & formatting
         self.ax.set_facecolor(self.ax_color)
         self.ax.grid(color=self.ax_gridlines_color, axis="y", zorder=0)
         self.ax.spines["left"].set_color(self.ax_spines_color)
@@ -24,3 +23,5 @@ class DiagramBase:
         self.ax.tick_params(axis="x", colors=self.ax_tick_color)
         self.ax.tick_params(axis="y", colors=self.ax_tick_color)
         self.fig.set_facecolor(self.fig_color)
+
+
