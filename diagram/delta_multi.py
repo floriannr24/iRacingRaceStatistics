@@ -2,13 +2,13 @@ import statistics
 import matplotlib.pyplot as plt
 import numpy as np
 
-from diagram.diagram_base import DiagramBase
+from diagram.base import Base
 
 
 # ToDo: select only a handful of players for comparison
 
 
-class DeltaMulti(DiagramBase):
+class DeltaMulti(Base):
     def __init__(self, input, px_width, px_height):
         super().__init__(input, px_width, px_height)
         self.number_of_laps = input[0]["laps_completed"] + 1
@@ -31,16 +31,23 @@ class DeltaMulti(DiagramBase):
             self.ax.plot(self.input[i]["delta"])
 
         # formatting
+
         bottom_border = 5 * round(self.calculateYMin() * 1.5 / 5)
+        y_ticklabels = self.createYTickLabels(list(np.arange(0, bottom_border, 5)))
+
         self.ax.set(xlim=(-0.5, self.number_of_laps - 0.5), ylim=(-5, bottom_border))
         self.ax.set_xticks(np.arange(0, self.number_of_laps))
         self.ax.set_xlabel("Laps", color="white")
+        self.ax.set_yticks(np.arange(0, bottom_border, 5))
+        self.ax.set_yticklabels(y_ticklabels)
         self.ax.set_ylabel("Cumulative gap to leader in seconds", color="white")
         self.ax.legend(self.extractDrivers(), loc="center left", facecolor="#36393F", labelcolor="white",
                        bbox_to_anchor=(1.05, 0.5), labelspacing=0.5, edgecolor="#7D8A93")
         # ax.set_title("Race report", pad="20.0", color="white")
         self.ax.invert_yaxis()
         plt.tick_params(labelright=True)
+
+        print(y_ticklabels)
 
         plt.tight_layout()
         plt.show()
@@ -55,3 +62,10 @@ class DeltaMulti(DiagramBase):
 
     def extractDrivers(self):
         return [lapdata["driver"] for lapdata in self.input]
+
+    def createYTickLabels(self, list):
+        for i, x in enumerate(list, 0):
+            if not i % 2 == 0:
+                list[i] = ""
+        return list
+

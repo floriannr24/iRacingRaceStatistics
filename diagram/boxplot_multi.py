@@ -2,13 +2,13 @@ from datetime import timedelta
 import matplotlib.pyplot as plt
 import numpy as np
 
-from diagram.diagram_base import DiagramBase
+from diagram.base import Base
 
 
 # todo: mark own player name as fat
 # todo: iRating next to names?
 
-class BoxplotMulti(DiagramBase):
+class BoxplotMulti(Base):
     def __init__(self, input, px_width, px_height):
         super().__init__(input, px_width, px_height)
         self.race_completed_laps = input[0]

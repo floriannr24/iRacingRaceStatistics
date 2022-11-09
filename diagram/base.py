@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 
 
-class DiagramBase:
+class Base:
 
     def __init__(self, input, px_width, px_height):
         self.input = input
