@@ -103,6 +103,12 @@ class DataProcessor:
             unique_drivers.add(item["display_name"])
         return unique_drivers
 
+    def gen_convertTimeformatToSeconds(self, laptime):
+            if not laptime == -1:
+                return laptime / 10000
+            else:
+                return None
+
     ####################################################################
 
     def bpm_extractLaptimes(self, all_laptimes, raceCompleted):
@@ -137,7 +143,7 @@ class DataProcessor:
     def bpm_cleanAndConvertLapTimes(self, lap_time, lap_number):
             if lap_number > 0:
                 if not lap_time == -1:
-                    seconds = self.delta_convertTimeformatToSeconds(lap_time)
+                    seconds = self.gen_convertTimeformatToSeconds(lap_time)
                     return seconds
                 if lap_time == -1:
                     return None
@@ -208,15 +214,6 @@ class DataProcessor:
         return lapsDict
 
     ####################################################################
-
-    def delta_cleanAndConvertLapTimes_Session(self, lap_time):
-        return self.delta_convertTimeformatToSeconds(lap_time)
-
-    def delta_convertTimeformatToSeconds(self, laptime):
-        if not laptime == -1:
-            return laptime / 10000
-        else:
-            return None
 
     def delta_calcDelta(self, lapsDict):
 
@@ -304,7 +301,7 @@ class DataProcessor:
             for record in laps_json:
                 if record["display_name"] == driver:
                     seconds_per_lap = self.bpm_cleanAndConvertLapTimes(record["lap_time"], record["lap_number"])
-                    sessionSeconds_per_lap = self.delta_cleanAndConvertLapTimes_Session(record["session_time"])
+                    sessionSeconds_per_lap = self.gen_convertTimeformatToSeconds(record["session_time"])
                     laps_completed_pos.append(record["lap_position"])
                     intDict["session_time"].append(sessionSeconds_per_lap)
 
