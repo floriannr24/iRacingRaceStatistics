@@ -23,16 +23,18 @@ class DeltaMulti(Base):
 
         self.ax.set_prop_cycle("color", colorList_rest)
 
-        # draw boxplot
-        for i in range(0, 3, 1):
-            self.ax.plot(self.input[i]["delta"], color=colorList_top3[i])
+        # split list into "top3" and "rest"
+        top3, rest = self.splitDataTop3(self.input)
 
-        for i in range(3, len(self.input), 1):
-            self.ax.plot(self.input[i]["delta"])
+        # draw boxplot
+        for i in range(0, len(top3), 1):
+            self.ax.plot(top3[i]["delta"], color=colorList_top3[i])
+
+        for i in range(0, len(rest), 1):
+            self.ax.plot(rest[i]["delta"])
 
         # formatting
-
-        bottom_border = 5 * round(self.calculateYMin() * 1.5 / 5)
+        bottom_border = self.calculateYMin()
         y_ticklabels = self.createYTickLabels(list(np.arange(0, bottom_border, 5)))
 
         self.ax.set(xlim=(-0.5, self.number_of_laps - 0.5), ylim=(-5, bottom_border))
@@ -56,7 +58,7 @@ class DeltaMulti(Base):
         for lapdata in self.input:
             indexLastLap = len(lapdata["delta"]) - 1
             deltaAtEnd.append(lapdata["delta"][indexLastLap])
-        return statistics.median(deltaAtEnd)
+        return 5 * round(statistics.median(deltaAtEnd) * 1.5 / 5)
 
     def extractDrivers(self):
         return [lapdata["driver"] for lapdata in self.input]
@@ -66,4 +68,19 @@ class DeltaMulti(Base):
             if not i % 2 == 0:
                 list[i] = ""
         return list
+
+    def splitDataTop3(self, laps):
+
+        top3 = []
+        rest = []
+
+        for data in laps:
+            if data["finish_position"] <= 3:
+                top3.append(data)
+            else:
+                rest.append(data)
+
+        return top3, rest
+
+
 

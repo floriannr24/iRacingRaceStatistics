@@ -50,7 +50,7 @@ class DataProcessor:
         output_data = self.delta_collectInfo(iRacingData_carclass, unique_drivers)          # collect info in dictionary
         output_data = self.gen_sortDictionary(output_data)                                  # sort dictionary by "laps completed" and "finish position"
         output_data = self.delta_find_DISQ_DISC(output_data)                                # find DISQ / DISC drivers and append them to the end of the dictionary
-        # output_data = self.delta_filterDrivers(output_data, beforeDrivers, afterDrivers)
+        output_data = self.delta_filterDrivers(output_data, beforeDrivers, afterDrivers)
         output = self.delta_calcDelta(output_data)                                          # calculate delta time to first and add to dictionary
 
         return output
@@ -249,35 +249,38 @@ class DataProcessor:
 
         return finished + disq_disc
 
-    # def delta_filterDrivers(self, data, beforeDrivers, afterDrivers):
-    #     name = "Florian Niedermeier2"
-    #
-    #     if ((beforeDrivers or afterDrivers) == None) or ((beforeDrivers or afterDrivers) == 0):
-    #         return data
-    #     else:
-    #
-    #         foundData = []
-    #         foundIndex = 0
-    #
-    #         # searching current driver
-    #         for x in range(0, len(data), 1):
-    #             if data[x]["driver"] == name:
-    #                 foundIndex = x
-    #
-    #         up_down = 1
-    #
-    #         # adding driver - 1, then driver + 1, then driver -2, +2, -3, +3 to new list
-    #         for i in range(0, beforeDrivers + 1, 1):
-    #             if i == 0:
-    #                 foundData.append(data[foundIndex])
-    #             else:
-    #                 foundData.insert(0, data[foundIndex - up_down])
-    #                 up_down += 1
-    #
-    #     for data in foundData:
-    #         print(data)
-    #
-    #     return foundData
+    def delta_filterDrivers(self, data, beforeDrivers, afterDrivers):
+        name = "Florian Niedermeier2"
+
+
+
+        if ((beforeDrivers or afterDrivers) == None) or ((beforeDrivers or afterDrivers) == 0):
+            return data
+
+        foundIndex = 0
+
+        # searching current driver
+        for x in range(0, len(data), 1):
+            if data[x]["driver"] == name:
+                foundIndex = x
+
+        # check if "beforeDrivers" and "afterDrivers" args are valid
+        if beforeDrivers+1 > data[foundIndex]["finish_position"] or afterDrivers > len(data)-1:
+            return data
+
+        else:
+
+            foundData = []
+
+            for i in range(1, beforeDrivers+1):
+                foundData.append(data[foundIndex-(beforeDrivers+1)+i])
+
+            foundData.append(data[foundIndex])
+
+            for i in range(1, afterDrivers+1):
+                foundData.append(data[foundIndex+i])
+
+        return foundData
 
     def delta_collectInfo(self, laps_json, unique_drivers):
         lapsDict = []
