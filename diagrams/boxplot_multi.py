@@ -1,8 +1,9 @@
+import statistics
 from datetime import timedelta
 import matplotlib.pyplot as plt
 import numpy as np
 
-from diagram.base import Base
+from diagrams.base import Base
 
 
 # todo: mark own player name as fat
@@ -35,22 +36,36 @@ class BoxplotMulti(Base):
                         patch_artist=True,
                         boxprops=dict(facecolor="#0084F2", color="#000000"),
                         flierprops=dict(markeredgecolor='#000000'),
-                        medianprops=dict(color="#000000"),
+                        medianprops=dict(color="#000000", linewidth=2),
                         whiskerprops=dict(color="#000000"),
                         capprops=dict(color="#000000"),
                         zorder=2,
-                        widths=0.6
+                        widths=0.7
                         )
+
+        scatter = []
+
+        for i, lapdata in enumerate(self.race_completed_laps):
+            x = np.random.normal(i+1, 0.06, len(lapdata))
+            scatter.append(x)
+
+        # for i, data in enumerate(self.race_completed_laps):
+        #     self.ax.scatter(scatter[i], self.race_completed_laps[i],
+        #                     zorder=3,
+        #                     alpha=0.5,
+        #                     c="yellow",
+        #                     s=8
+        #                     )
 
         self.ax.boxplot(self.race_not_completed_laps,
                         patch_artist=True,
                         boxprops=dict(facecolor="#6F6F6F", color="#000000"),
                         flierprops=dict(markeredgecolor='#000000'),
-                        medianprops=dict(color="#000000"),
+                        medianprops=dict(color="#000000", linewidth=2),
                         whiskerprops=dict(color="#000000"),
                         capprops=dict(color="#000000"),
                         zorder=2,
-                        widths=0.6
+                        widths=0.7
                         )
 
         # formatting
@@ -61,6 +76,8 @@ class BoxplotMulti(Base):
         self.ax.set_yticklabels(self.calculateMinutesYAxis(number_of_seconds_shown))
         self.ax.set_xticks(np.arange(1, self.number_Of_Drivers + 1))
         self.ax.set_xticklabels(self.drivers_raw, rotation=45, rotation_mode="anchor", ha="right")
+
+        self.ax.get_xticklabels()[3].set_fontweight("bold")
 
         plt.tight_layout()
         plt.show()
@@ -113,7 +130,6 @@ class BoxplotMulti(Base):
                 td_raw = td_raw + ".000000"
 
             td_minutes = td_raw.split(":", 1)[1]
-            td_minutes_cutMilliseconds = td_minutes[:-3]
-            yticks.append(td_minutes_cutMilliseconds)
+            yticks.append(td_minutes[:-3])
 
         return yticks

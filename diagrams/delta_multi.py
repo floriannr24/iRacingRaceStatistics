@@ -2,7 +2,7 @@ import statistics
 import matplotlib.pyplot as plt
 import numpy as np
 
-from diagram.base import Base
+from diagrams.base import Base
 
 
 # ToDo: select only a handful of players for comparison
@@ -46,8 +46,6 @@ class DeltaMulti(Base):
         # ax.set_title("Race report", pad="20.0", color="white")
         self.ax.invert_yaxis()
         plt.tick_params(labelright=True)
-
-        print(y_ticklabels)
 
         plt.tight_layout()
         plt.show()
