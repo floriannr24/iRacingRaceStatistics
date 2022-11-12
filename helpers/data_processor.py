@@ -10,28 +10,28 @@ class DataProcessor:
 
     def get_boxplotMulti_Data(self):
 
+        # get session data from iRacingAPI + FuzzwahAPI
+        self.iRacingData, self.fuzzData = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
 
-        self.iRacingData, self.fuzzData = LapsMulti(self.subsession_id, self.session).requestLapsMulti()    # get data from iRacingAPI + FuzzwahAPI
+        carclass_id = self.gen_searchUsersCarClass("Florian Niedermeier2")                          # search carclass id of user
+        iRacingData_carclass, fuzzData_carclass = self.gen_filterByCarClass(carclass_id)            # get only data for corresponding carclass
+        unique_drivers = self.gen_findUniqueDrivers(iRacingData_carclass)                           # find unique drivers in said carclass
 
-        carclass_id = self.gen_searchUsersCarClass("Florian Niedermeier2")                                  # search carclass id of user
-        iRacingData_carclass, fuzzData_carclass = self.gen_filterByCarClass(carclass_id)                    # get only data for corresponding carclass
-        unique_drivers = self.gen_findUniqueDrivers(iRacingData_carclass)                                   # find unique drivers in said carclass
+        lapsDict = self.bpm_collectInfo(iRacingData_carclass, unique_drivers)                       # collect info in dictionary
+        output = self.gen_sortDictionary(lapsDict)                                                  # sort dictionary by "laps completed" and "finish position"
 
-        lapsDict = self.bpm_collectInfo(iRacingData_carclass, unique_drivers)                               # collect info in dictionary
-        output = self.gen_sortDictionary(lapsDict)                                                          # sort dictionary by "laps completed" and "finish position"
-
-        race_completed_raw = self.gen_extractLaptimes(output, True)                                         # extract all data of completed races
+        race_completed_raw = self.bpm_extractLaptimes(output, True)                                 # extract all data of completed races
         race_completed_clean = self.bpm_scanForInvalidTypes(race_completed_raw, -1, None)
 
-        race_not_completed_raw = self.gen_extractLaptimes(output, False)                                    # extract all data of not completed races
-        race_not_completed_clean = self.bpm_scanForInvalidTypes(race_not_completed_raw, -1, None)           # scan for invalid lap-types (-1, 0, None)
+        race_not_completed_raw = self.bpm_extractLaptimes(output, False)                            # extract all data of not completed races
+        race_not_completed_clean = self.bpm_scanForInvalidTypes(race_not_completed_raw, -1, None)   # scan for invalid lap-types (-1, 0, None)
 
-        drivers = self.bpm_extractDrivers(output)                                                           # extract a driver list
-        number_of_laps = self.bpm_numberOfLapsInRace(output)                                                # calculate number of laps completed
+        drivers = self.bpm_extractDrivers(output)                                                   # extract a driver list
+        number_of_laps = self.bpm_numberOfLapsInRace(output)                                        # calculate number of laps completed
 
         output = []
 
-        output.append(race_completed_clean)                                                                 # tie everything together
+        output.append(race_completed_clean)                                                         # tie everything together
         output.append(race_not_completed_clean)
         output.append(drivers)
         output.append(number_of_laps)
@@ -67,35 +67,6 @@ class DataProcessor:
             else:
                 continue
         return carclassid
-
-    def gen_extractLaptimes(self, all_laptimes, raceCompleted):
-
-        numberOfDrivers = len(all_laptimes)
-        drivers_raw = []
-
-        if raceCompleted:
-            laps = []
-            for lapdata in all_laptimes:
-                if lapdata["result_status"] == "Running":
-                    laps.append(lapdata["laps"])
-                    drivers_raw.append(lapdata["driver"])
-                else:
-                    continue
-            return laps
-        else:
-            laps = []
-            for lapdata in all_laptimes:
-                if lapdata["result_status"] == "Disqualified" or lapdata["result_status"] == "Disconnected":
-                    laps.append(lapdata["laps"])
-                    drivers_raw.append(lapdata["driver"])
-                else:
-                    continue
-
-            # fill up indices, so DISQ and DISC drivers are put to the last places in the diagram
-            indicesToFillUp = numberOfDrivers - len(laps)
-            for i in range(indicesToFillUp):
-                laps.insert(0, "")
-            return laps
 
     def gen_sortDictionary(self, lapsDict):
         secSortDict = list(sorted(lapsDict, key=lambda p: p["finish_position"])) # secondary sort by key "finish_position"
@@ -133,6 +104,35 @@ class DataProcessor:
         return unique_drivers
 
     ####################################################################
+
+    def bpm_extractLaptimes(self, all_laptimes, raceCompleted):
+
+        numberOfDrivers = len(all_laptimes)
+        drivers_raw = []
+
+        if raceCompleted:
+            laps = []
+            for lapdata in all_laptimes:
+                if lapdata["result_status"] == "Running":
+                    laps.append(lapdata["laps"])
+                    drivers_raw.append(lapdata["driver"])
+                else:
+                    continue
+            return laps
+        else:
+            laps = []
+            for lapdata in all_laptimes:
+                if lapdata["result_status"] == "Disqualified" or lapdata["result_status"] == "Disconnected":
+                    laps.append(lapdata["laps"])
+                    drivers_raw.append(lapdata["driver"])
+                else:
+                    continue
+
+            # fill up indices, so DISQ and DISC drivers are put to the last places in the diagram
+            indicesToFillUp = numberOfDrivers - len(laps)
+            for i in range(indicesToFillUp):
+                laps.insert(0, "")
+            return laps
 
     def bpm_cleanAndConvertLapTimes(self, lap_time, lap_number):
             if lap_number > 0:
