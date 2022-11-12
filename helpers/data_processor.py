@@ -252,8 +252,6 @@ class DataProcessor:
     def delta_filterDrivers(self, data, beforeDrivers, afterDrivers):
         name = "Florian Niedermeier2"
 
-
-
         if ((beforeDrivers or afterDrivers) == None) or ((beforeDrivers or afterDrivers) == 0):
             return data
 

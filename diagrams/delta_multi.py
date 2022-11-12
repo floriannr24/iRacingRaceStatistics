@@ -25,22 +25,27 @@ class DeltaMulti(Base):
 
         # split list into "top3" and "rest"
         top3, rest = self.splitDataTop3(self.input)
+        top3.reverse()
 
-        # draw boxplot
+        # draw plots
+        counter = 2
         for i in range(0, len(top3), 1):
-            self.ax.plot(top3[i]["delta"], color=colorList_top3[i])
+            data = top3[i]["delta"]
+            self.ax.plot(data, color=colorList_top3[counter])
+            counter = counter-1
 
         for i in range(0, len(rest), 1):
             self.ax.plot(rest[i]["delta"])
 
         # formatting
+        steps = 2.5
         bottom_border = self.calculateYMin()
-        y_ticklabels = self.createYTickLabels(list(np.arange(0, bottom_border, 5)))
+        y_ticklabels = self.createYTickLabels(list(np.arange(0, bottom_border, steps)))
 
         self.ax.set(xlim=(-0.5, self.number_of_laps - 0.5), ylim=(-5, bottom_border))
         self.ax.set_xticks(np.arange(0, self.number_of_laps))
         self.ax.set_xlabel("Laps", color="white")
-        self.ax.set_yticks(np.arange(0, bottom_border, 5))
+        self.ax.set_yticks(np.arange(0, bottom_border, steps))
         self.ax.set_yticklabels(y_ticklabels)
         self.ax.set_ylabel("Cumulative gap to leader in seconds", color="white")
         self.ax.legend(self.extractDrivers(), loc="center left", facecolor="#36393F", labelcolor="white",

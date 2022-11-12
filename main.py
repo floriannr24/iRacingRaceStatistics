@@ -1,5 +1,4 @@
-from helpers.configurator import Configurator
-from helpers.diagram import Diagram
+from helpers.diagram import Diagram, Configurator
 from sessionbuilder.session_builder import SessionBuilder
 
 my_sessionBuilder = SessionBuilder()
@@ -11,6 +10,6 @@ session = my_sessionBuilder.session
 
 subsession_id = 52167419
 
-config = Configurator(None, None, "delta")
+config = Configurator(3, 5, "delta")
 
 Diagram(subsession_id, session, config)
