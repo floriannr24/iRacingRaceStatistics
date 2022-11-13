@@ -38,7 +38,7 @@ class DeltaMulti(Base):
             self.ax.plot(rest[i]["delta"])
 
         # formatting
-        steps = 2.5
+        steps = 5
         bottom_border = self.calculateYMin()
         y_ticklabels = self.createYTickLabels(list(np.arange(0, bottom_border, steps)))
 

@@ -10,6 +10,6 @@ session = my_sessionBuilder.session
 
 subsession_id = 52167419
 
-config = Configurator(3, 5, "delta")
+config = Configurator("delta")
 
 Diagram(subsession_id, session, config)
