@@ -10,27 +10,22 @@ from diagrams.base import Base
 # todo: iRating next to names?
 
 class BoxplotMulti(Base):
-    def __init__(self, input, px_width, px_height):
-        super().__init__(input, px_width, px_height)
+    def __init__(self, input, config):
+        # init
         self.race_completed_laps = input[0]
         self.race_not_completed_laps = input[1]
         self.drivers_raw = input[2]
         self.number_Of_Drivers = len(input[2])
-        self.draw()
+        self.ymin, self.ymax, self.interval = self.unpackConfig(config.options)
 
-    def draw(self):
+        # draw
+        super().__init__(input, config.options.get("px_width"), config.options.get("px_height"))
+        self.draw_boxplot(config.options)
 
-        # self.ax.set_ylabel("time in minutes", color="white")
-        # self.ax.set_title("Race report", pad="20.0", color="white")
+    def draw_boxplot(self, options):
 
         xmin = 0
         xmax = self.number_Of_Drivers + 1
-
-        maxmin = self.calculateYMaxMin(self.race_completed_laps, 0.5)
-        ymax = maxmin[1]
-        ymin = maxmin[0]
-
-        intervall = 0.5
 
         self.ax.boxplot(self.race_completed_laps,
                         patch_artist=True,
@@ -43,44 +38,55 @@ class BoxplotMulti(Base):
                         widths=0.7
                         )
 
-        scatter = []
+        if options.get("showLaptimes") == 1:
+            self.draw_laptimes()
 
-        for i, lapdata in enumerate(self.race_completed_laps):
-            x = np.random.normal(i+1, 0.06, len(lapdata))
-            scatter.append(x)
-
-        # for i, data in enumerate(self.race_completed_laps):
-        #     self.ax.scatter(scatter[i], self.race_completed_laps[i],
-        #                     zorder=3,
-        #                     alpha=0.5,
-        #                     c="yellow",
-        #                     s=8
-        #                     )
-
-        self.ax.boxplot(self.race_not_completed_laps,
-                        patch_artist=True,
-                        boxprops=dict(facecolor="#6F6F6F", color="#000000"),
-                        flierprops=dict(markeredgecolor='#000000'),
-                        medianprops=dict(color="#000000", linewidth=2),
-                        whiskerprops=dict(color="#000000"),
-                        capprops=dict(color="#000000"),
-                        zorder=2,
-                        widths=0.7
-                        )
+        if options.get("showDISC") == 1:
+            self.draw_DISCDISQ()
 
         # formatting
-        number_of_seconds_shown = np.arange(ymin, ymax + intervall, intervall)
+        number_of_seconds_shown = np.arange(self.ymin, self.ymax + self.interval, self.interval)
 
-        self.ax.set(xlim=(xmin, xmax), ylim=(ymin, ymax))
+        self.ax.set(xlim=(xmin, xmax), ylim=(self.ymin, self.ymax))
         self.ax.set_yticks(number_of_seconds_shown)
         self.ax.set_yticklabels(self.calculateMinutesYAxis(number_of_seconds_shown))
-        self.ax.set_xticks(np.arange(1, self.number_Of_Drivers + 1))
-        self.ax.set_xticklabels(self.drivers_raw, rotation=45, rotation_mode="anchor", ha="right")
+
+        if options.get("showDISC") == 0:
+            self.ax.set_xticks(np.arange(1, self.number_Of_Drivers + 1))
+            self.ax.set_xticklabels(self.drivers_raw, rotation=45, rotation_mode="anchor", ha="right")
+        else:
+            self.ax.set_xticks(np.arange(1, self.number_Of_Drivers + 1))
+            self.ax.set_xticklabels(self.drivers_raw, rotation=45, rotation_mode="anchor", ha="right")
 
         self.ax.get_xticklabels()[3].set_fontweight("bold")
 
         plt.tight_layout()
         plt.show()
+
+    def draw_laptimes(self):
+        scatter = []
+        for i, lapdata in enumerate(self.race_completed_laps):
+            x = np.random.normal(i + 1, 0.06, len(lapdata))
+            scatter.append(x)
+        for i, data in enumerate(self.race_completed_laps):
+            self.ax.scatter(scatter[i], self.race_completed_laps[i],
+                            zorder=3,
+                            alpha=0.5,
+                            c="yellow",
+                            s=8
+                            )
+
+    def draw_DISCDISQ(self):
+            self.ax.boxplot(self.race_not_completed_laps,
+                            patch_artist=True,
+                            boxprops=dict(facecolor="#6F6F6F", color="#000000"),
+                            flierprops=dict(markeredgecolor='#000000'),
+                            medianprops=dict(color="#000000", linewidth=2),
+                            whiskerprops=dict(color="#000000"),
+                            capprops=dict(color="#000000"),
+                            zorder=2,
+                            widths=0.7
+                            )
 
     def calculateYMaxMin(self, lapdata, roundBase):
 
@@ -133,3 +139,27 @@ class BoxplotMulti(Base):
             yticks.append(td_minutes[:-3])
 
         return yticks
+
+    def unpackConfig(self, options):
+
+        if options.get("setYAxis") == 1:
+            ymin = options.get("minVal")
+            ymax = options.get("maxVal")
+        else:
+            maxmin = self.calculateYMaxMin(self.race_completed_laps, 0.5)
+            ymax = maxmin[1]
+            ymin = maxmin[0]
+
+        if options.get("setYAxisInterval") == 1:
+            interval = options.get("interval")
+        else:
+            interval = 0.5
+
+        if options.get("showDISC") == 0:
+            number_Of_Drivers_Not_Completed = len([data for data in self.race_not_completed_laps if not not data])
+            self.number_Of_Drivers = self.number_Of_Drivers - number_Of_Drivers_Not_Completed
+            self.drivers_raw = self.drivers_raw[:-number_Of_Drivers_Not_Completed or None]
+
+        return ymin, ymax, interval
+
+

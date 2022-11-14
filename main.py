@@ -10,6 +10,16 @@ session = my_sessionBuilder.session
 
 subsession_id = 52167419
 
-config = Configurator("delta")
+config = Configurator("bpm",
+                      setYAxis=0,
+                      minVal=0,
+                      maxVal=0,
+                      setYAxisInterval=1,
+                      interval=0.5,
+                      showDISC=1,
+                      showLaptimes=0,
+                      showMean=0,
+                      px_width=800,
+                      px_height=600)
 
 Diagram(subsession_id, session, config)
