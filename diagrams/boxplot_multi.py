@@ -20,9 +20,9 @@ class BoxplotMulti(Base):
 
         # draw
         super().__init__(input, config.options.get("px_width"), config.options.get("px_height"))
-        self.draw_boxplot(config.options)
+        self.draw(config.options)
 
-    def draw_boxplot(self, options):
+    def draw(self, options):
 
         xmin = 0
         xmax = self.number_Of_Drivers + 1
@@ -58,7 +58,13 @@ class BoxplotMulti(Base):
             self.ax.set_xticks(np.arange(1, self.number_Of_Drivers + 1))
             self.ax.set_xticklabels(self.drivers_raw, rotation=45, rotation_mode="anchor", ha="right")
 
-        self.ax.get_xticklabels()[3].set_fontweight("bold")
+        try:
+            index = self.drivers_raw.index("Florian Niedermeier2")
+            self.ax.get_xticklabels()[index].set_fontweight("bold")
+        except ValueError:
+            pass
+
+
 
         plt.tight_layout()
         plt.show()

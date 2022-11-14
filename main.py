@@ -10,7 +10,7 @@ session = my_sessionBuilder.session
 
 subsession_id = 52167419
 
-config = Configurator("bpm",
+config = Configurator("bpm", "Florian Niedermeier2",
                       setYAxis=0,
                       minVal=0,
                       maxVal=0,
