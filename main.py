@@ -8,9 +8,9 @@ session = my_sessionBuilder.session
 # driver1 = Driver("Florian Niedermeier2", session)
 # cust_id = driver1.cust_id
 
-subsession_id = 52167419
+subsession_id = 52312291
 
-config = Configurator("bpm", "Florian Niedermeier2",
+config = Configurator("delta", "Florian Niedermeier2",
                       setYAxis=0,
                       minVal=0,
                       maxVal=0,
@@ -22,4 +22,7 @@ config = Configurator("bpm", "Florian Niedermeier2",
                       px_width=800,
                       px_height=600)
 
+
+
 Diagram(subsession_id, session, config)
+

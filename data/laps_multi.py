@@ -41,7 +41,11 @@ class LapsMulti:
             base_download_url = racesJson_final["chunk_info"]["base_download_url"]
             chunk_file_names = racesJson_final["chunk_info"]["chunk_file_names"][0]
 
-            self.iRacingData = requests.get(base_download_url + chunk_file_names).json()
+            self.iRacingData = []
+
+            for data in racesJson_final["chunk_info"]["chunk_file_names"]:
+                intList = requests.get(base_download_url + data).json()
+                self.iRacingData = self.iRacingData + intList
 
             self.cache_save()
 
