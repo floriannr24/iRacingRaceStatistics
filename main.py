@@ -8,21 +8,21 @@ session = my_sessionBuilder.session
 # driver1 = Driver("Florian Niedermeier2", session)
 # cust_id = driver1.cust_id
 
-subsession_id = 52312291
+#subsession_id = [52365324]
+subsession_id = [52310798, 52312291, 52332675, 52333422, 52348632, 52349354, 52365324]
 
-config = Configurator("delta", "Florian Niedermeier2",
+config = Configurator("pace", "Florian Niedermeier2",
                       setYAxis=0,
                       minVal=0,
                       maxVal=0,
                       setYAxisInterval=1,
-                      interval=0.5,
+                      interval=0.2,
                       showDISC=1,
-                      showLaptimes=0,
+                      showLaptimes=1,
                       showMean=0,
                       px_width=800,
                       px_height=600)
 
-
-
 Diagram(subsession_id, session, config)
+
 

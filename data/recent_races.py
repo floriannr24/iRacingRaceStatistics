@@ -7,10 +7,12 @@ class RecentRaces:
 
     def __init__(self, session):
         self.session = session
+        self.iRacingData = None
         self.cust_id = 817320
 
-    def get_RecentRaces_Data(self):
-        data = self.requestRecentRaces()
+    def get_RecentRaces_Data(self, fetchFromCache):
+
+        data = self.requestRecentRaces(fetchFromCache)
 
         exportDict = []
 
@@ -30,26 +32,27 @@ class RecentRaces:
 
         return exportDict
 
-    def requestRecentRaces(self):
+    def requestRecentRaces(self, fetchFromCache):
 
         load_success = False
 
-        try:
-            self.iRacingData = self.cache_load()
-            load_success = True
-        except FileNotFoundError:
-            print('[recent_race] File does not exist')
+        if fetchFromCache:
+            try:
+                self.iRacingData = self.cache_load()
+                load_success = True
+            except FileNotFoundError:
+                print('[recent_race] File does not exist')
+        else:
+            if not load_success:
+                print('[recent_race] Requesting recent races from iRacing API...')
 
-        if not load_success:
-            print('[recent_race] Requesting recent races from iRacing API...')
+                # iRacingAPI
+                racesJson = self.session.get('https://members-ng.iracing.com/data/stats/member_recent_races')
+                racesDict = racesJson.json()
+                racesDict_final = requests.get(racesDict["link"]).json()
+                self.iRacingData = racesDict_final["races"]
 
-            # iRacingAPI
-            racesJson = self.session.get('https://members-ng.iracing.com/data/stats/member_recent_races')
-            racesDict = racesJson.json()
-            racesDict_final = requests.get(racesDict["link"]).json()
-            self.iRacingData = racesDict_final["races"]
-
-            self.cache_save()
+                self.cache_save()
 
         return self.iRacingData
 

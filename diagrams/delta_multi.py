@@ -12,6 +12,10 @@ class DeltaMulti(Base):
     def __init__(self, input, px_width, px_height):
         super().__init__(input, px_width, px_height)
         self.number_of_laps = input[0]["laps_completed"] + 1
+
+        for x in input:
+            print(x)
+
         self.draw()
 
     def draw(self):
@@ -86,6 +90,9 @@ class DeltaMulti(Base):
                 rest.append(data)
 
         return top3, rest
+
+    def unpackConfig(self):
+        pass
 
 
 

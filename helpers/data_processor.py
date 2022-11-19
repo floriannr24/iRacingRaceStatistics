@@ -1,9 +1,11 @@
 from data.laps_multi import LapsMulti
+from data.laps_single import LapsSingle
+from data.meta import Meta
 
 
 class DataProcessor:
     def __init__(self, subsession_id, session):
-        self.subsession_id = subsession_id
+        self.subsession_id = self.unpackSubsessionIDs(subsession_id)
         self.session = session
         self.iRacingData = None
         self.fuzzData = None
@@ -13,25 +15,25 @@ class DataProcessor:
         # get session data from iRacingAPI + FuzzwahAPI
         self.iRacingData, self.fuzzData = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
 
-        carclass_id = self.gen_searchUsersCarClass("Florian Niedermeier2")                          # search carclass id of user
-        iRacingData_carclass, fuzzData_carclass = self.gen_filterByCarClass(carclass_id)            # get only data for corresponding carclass
-        unique_drivers = self.gen_findUniqueDrivers(iRacingData_carclass)                           # find unique drivers in said carclass
+        carclass_id = self.gen_searchUsersCarClass("Florian Niedermeier2")  # search carclass id of user
+        iRacingData_carclass, fuzzData_carclass = self.gen_filterByCarClass(carclass_id)  # get only data for corresponding carclass
+        unique_drivers = self.gen_findUniqueDrivers(iRacingData_carclass)  # find unique drivers in said carclass
 
-        lapsDict = self.bpm_collectInfo(iRacingData_carclass, unique_drivers)                       # collect info in dictionary
-        output = self.gen_sortDictionary(lapsDict)                                                  # sort dictionary by "laps completed" and "finish position"
+        lapsDict = self.bpm_collectInfo(iRacingData_carclass, unique_drivers)  # collect info in dictionary
+        output = self.gen_sortDictionary(lapsDict)  # sort dictionary by "laps completed" and "finish position"
 
-        race_completed_raw = self.bpm_extractLaptimes(output, True)                                 # extract all data of completed races
+        race_completed_raw = self.bpm_extractLaptimes(output, True)  # extract all data of completed races
         race_completed_clean = self.bpm_scanForInvalidTypes(race_completed_raw, -1, None)
 
-        race_not_completed_raw = self.bpm_extractLaptimes(output, False)                            # extract all data of not completed races
-        race_not_completed_clean = self.bpm_scanForInvalidTypes(race_not_completed_raw, -1, None)   # scan for invalid lap-types (-1, 0, None)
+        race_not_completed_raw = self.bpm_extractLaptimes(output, False)  # extract all data of not completed races
+        race_not_completed_clean = self.bpm_scanForInvalidTypes(race_not_completed_raw, -1, None)  # scan for invalid lap-types (-1, 0, None)
 
-        drivers = self.bpm_extractDrivers(output)                                                   # extract a driver list
-        number_of_laps = self.bpm_numberOfLapsInRace(output)                                        # calculate number of laps completed
+        drivers = self.bpm_extractDrivers(output)  # extract a driver list
+        number_of_laps = self.bpm_numberOfLapsInRace(output)  # calculate number of laps completed
 
         output = []
 
-        output.append(race_completed_clean)                                                         # tie everything together
+        output.append(race_completed_clean)  # tie everything together
         output.append(race_not_completed_clean)
         output.append(drivers)
         output.append(number_of_laps)
@@ -43,17 +45,37 @@ class DataProcessor:
         # get session data from iRacingAPI + FuzzwahAPI
         self.iRacingData, self.fuzzData = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
 
-        carclass_id = self.gen_searchUsersCarClass("Florian Niedermeier2")                  # search carclass id of user
-        iRacingData_carclass, fuzzData_carclass = self.gen_filterByCarClass(carclass_id)    # get only data for corresponding carclass
-        unique_drivers = self.gen_findUniqueDrivers(iRacingData_carclass)                   # find unique drivers in said carclass
+        carclass_id = self.gen_searchUsersCarClass("Florian Niedermeier2")  # search carclass id of user
+        iRacingData_carclass, fuzzData_carclass = self.gen_filterByCarClass(carclass_id)  # get only data for corresponding carclass
+        unique_drivers = self.gen_findUniqueDrivers(iRacingData_carclass)  # find unique drivers in said carclass
 
-        output_data = self.delta_collectInfo(iRacingData_carclass, unique_drivers)          # collect info in dictionary
-        output_data = self.gen_sortDictionary(output_data)                                  # sort dictionary by "laps completed" and "finish position"
-        output_data = self.delta_find_DISQ_DISC(output_data)                                # find DISQ / DISC drivers and append them to the end of the dictionary
-        output_data = self.delta_filterDrivers(output_data, beforeDrivers, afterDrivers)
-        output = self.delta_calcDelta(output_data)                                          # calculate delta time to first and add to dictionary
+        output_data = self.delta_collectInfo(iRacingData_carclass, unique_drivers)  # collect info in dictionary
+        output_data = self.gen_sortDictionary(output_data)  # sort dictionary by "laps completed" and "finish position"
+        output_data = self.delta_find_DISQ_DISC(output_data)  # find DISQ / DISC drivers and append them to the end of the dictionary
+        # output_data = self.delta_filterDrivers(output_data, beforeDrivers, afterDrivers)
+        output = self.delta_calcDelta(output_data)  # calculate delta time to first and add to dictionary
 
         return output
+
+    def get_Pace_Data(self):
+
+        outerDict = {}
+
+        for i, id in enumerate(self.subsession_id):
+            irData, fuzzData = LapsSingle(id, self.session).requestLapsSingle()
+            metaData = Meta(id, self.session).requestMeta()
+
+            output = self.pace_collectInfo(irData)
+            output = self.gen_scanForInvalidTypes(output, -1, None)
+
+            data = {}
+            outerDict["race"+str(i)] = data
+            data["laps"] = output
+            data["metaData"] = metaData
+
+        print(outerDict)
+
+        return outerDict
 
     ####################################################################
 
@@ -69,8 +91,10 @@ class DataProcessor:
         return carclassid
 
     def gen_sortDictionary(self, lapsDict):
-        secSortDict = list(sorted(lapsDict, key=lambda p: p["finish_position"])) # secondary sort by key "finish_position"
-        primSortDict = list(sorted(secSortDict, key=lambda p: p["laps_completed"], reverse=True))  # primary sort by key "laps_completed", descending
+        secSortDict = list(
+            sorted(lapsDict, key=lambda p: p["finish_position"]))  # secondary sort by key "finish_position"
+        primSortDict = list(sorted(secSortDict, key=lambda p: p["laps_completed"],
+                                   reverse=True))  # primary sort by key "laps_completed", descending
 
         for lapdata in primSortDict:
             if lapdata["finish_position"] == 0:
@@ -104,10 +128,13 @@ class DataProcessor:
         return unique_drivers
 
     def gen_convertTimeformatToSeconds(self, laptime):
-            if not laptime == -1:
-                return laptime / 10000
-            else:
-                return None
+        if not laptime == -1:
+            return laptime / 10000
+        else:
+            return None
+
+    def gen_scanForInvalidTypes(self, laptimes, arg1, arg2):
+        return [laptime for laptime in laptimes if laptime != arg1 if laptime != arg2]
 
     ####################################################################
 
@@ -141,30 +168,27 @@ class DataProcessor:
             return laps
 
     def bpm_cleanAndConvertLapTimes(self, lap_time, lap_number):
-            if lap_number > 0:
-                if not lap_time == -1:
-                    seconds = self.gen_convertTimeformatToSeconds(lap_time)
-                    return seconds
-                if lap_time == -1:
-                    return None
-            else:
-                return lap_time
+        if lap_number > 0:
+            if not lap_time == -1:
+                seconds = self.gen_convertTimeformatToSeconds(lap_time)
+                return seconds
+            if lap_time == -1:
+                return None
+        else:
+            return lap_time
 
     def bpm_scanForInvalidTypes(self, all_laptimes, arg1, arg2):
-        cleanLaps1 = []
-        cleanLaps2 = []
+        cleanLaps = []
         for laps in all_laptimes:
-            cleanLaps1.append([value for value in laps if value != arg1])
-        for laps in cleanLaps1:
-            cleanLaps2.append([value for value in laps if value != arg2])
-        return cleanLaps2
+            cleanLaps.append([value for value in laps if value != arg1 if value != arg2])
+        return cleanLaps
 
     def bpm_numberOfLapsInRace(self, reqLaps):
-            for driver in reqLaps:
-                if driver["result_status"] == "Running":
-                    return driver["laps_completed"]
-                else:
-                    continue
+        for driver in reqLaps:
+            if driver["result_status"] == "Running":
+                return driver["laps_completed"]
+            else:
+                continue
 
     def bpm_extractDrivers(self, all_laptimes):
 
@@ -263,20 +287,20 @@ class DataProcessor:
                 foundIndex = x
 
         # check if "beforeDrivers" and "afterDrivers" args are valid
-        if beforeDrivers+1 > data[foundIndex]["finish_position"] or afterDrivers > len(data)-1:
+        if beforeDrivers + 1 > data[foundIndex]["finish_position"] or afterDrivers > len(data) - 1:
             return data
 
         else:
 
             foundData = []
 
-            for i in range(1, beforeDrivers+1):
-                foundData.append(data[foundIndex-(beforeDrivers+1)+i])
+            for i in range(1, beforeDrivers + 1):
+                foundData.append(data[foundIndex - (beforeDrivers + 1) + i])
 
             foundData.append(data[foundIndex])
 
-            for i in range(1, afterDrivers+1):
-                foundData.append(data[foundIndex+i])
+            for i in range(1, afterDrivers + 1):
+                foundData.append(data[foundIndex + i])
 
         return foundData
 
@@ -316,3 +340,22 @@ class DataProcessor:
                     intDict["result_status"] = fuzz["out"]
 
         return lapsDict
+
+    ####################################################################
+
+    def pace_collectInfo(self, irdata):
+
+        intList = []
+
+        for lap in irdata:
+            laptime = lap["lap_time"]
+            laptime = self.gen_convertTimeformatToSeconds(laptime)
+            intList.append(laptime)
+
+        return intList
+
+    def unpackSubsessionIDs(self, subsession_id):
+        if len(subsession_id) > 1:
+            return subsession_id
+        else:
+            return subsession_id[0]

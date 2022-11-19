@@ -1,5 +1,6 @@
 from diagrams.boxplot_multi import BoxplotMulti
 from diagrams.delta_multi import DeltaMulti
+from diagrams.pace_compare import PaceCompare
 from helpers.data_processor import DataProcessor
 
 
@@ -17,6 +18,10 @@ class Diagram:
                 dataprocessor = DataProcessor(subsession_id, session)
                 data = dataprocessor.get_Delta_Data(0, 0)
                 return DeltaMulti(data, 950, 600)
+            case "pace":
+                dataprocessor = DataProcessor(subsession_id, session)
+                data = dataprocessor.get_Pace_Data()
+                return PaceCompare(data, config)
 
 
 class Configurator:

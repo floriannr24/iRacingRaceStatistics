@@ -1,20 +1,18 @@
 import statistics
 from datetime import timedelta
-import matplotlib.pyplot as plt
+
 import numpy as np
+from matplotlib import pyplot as plt
 
 from diagrams.base import Base
 
-# todo: iRating next to names?
 
-class BoxplotMulti(Base):
+class PaceCompare(Base):
     def __init__(self, input, config):
-        # init
-        self.race_completed_laps = input[0]
-        self.race_not_completed_laps = input[1]
-        self.drivers_raw = input[2]
-        self.number_Of_Drivers = len(input[2])
-        self.ymin, self.ymax, self.interval, self.showMean, self.showMedianLine = self.unpackConfig(config.options)
+        self.race_completed_laps, self.metaData = self.unpackData(input)
+        self.number_Of_Races = len(input)
+        self.boxplot = None
+        self.ymin, self.ymax, self.interval, self.showMean = self.unpackConfig(config.options)
 
         # draw
         super().__init__(input, config.options.get("px_width"), config.options.get("px_height"))
@@ -23,9 +21,9 @@ class BoxplotMulti(Base):
     def draw(self, options):
 
         xmin = 0
-        xmax = self.number_Of_Drivers + 1
+        xmax = self.number_Of_Races + 1
 
-        self.ax.boxplot(self.race_completed_laps,
+        self.boxplot = self.ax.boxplot(self.race_completed_laps,
                         patch_artist=True,
                         boxprops=dict(facecolor="#0084F2", color="#000000"),
                         flierprops=dict(markeredgecolor='#000000'),
@@ -33,7 +31,7 @@ class BoxplotMulti(Base):
                         whiskerprops=dict(color="#000000"),
                         capprops=dict(color="#000000"),
                         zorder=2,
-                        widths=0.7,
+                        widths=0.3,
                         showmeans=self.showMean,
                         meanprops=dict(marker="o", markerfacecolor="red", fillstyle="full", markeredgecolor="None")
                         )
@@ -41,11 +39,9 @@ class BoxplotMulti(Base):
         if options.get("showLaptimes") == 1:
             self.draw_laptimes()
 
-        if options.get("showDISC") == 1:
-            self.draw_DISCDISQ()
+        y_higherWhisker, y_75, y_median, y_25, y_lowerWhisker, x_coords = self.calcLines(self.race_completed_laps)
 
-        if self.showMedianLine:
-            self.draw_medianLine()
+        self.draw_lines(y_higherWhisker, y_75, y_median, y_25, y_lowerWhisker, x_coords)
 
         # formatting
         number_of_seconds_shown = np.arange(self.ymin, self.ymax + self.interval, self.interval)
@@ -54,18 +50,13 @@ class BoxplotMulti(Base):
         self.ax.set_yticks(number_of_seconds_shown)
         self.ax.set_yticklabels(self.calculateMinutesYAxis(number_of_seconds_shown))
 
-        if options.get("showDISC") == 0:
-            self.ax.set_xticks(np.arange(1, self.number_Of_Drivers + 1))
-            self.ax.set_xticklabels(self.drivers_raw, rotation=45, rotation_mode="anchor", ha="right")
-        else:
-            self.ax.set_xticks(np.arange(1, self.number_Of_Drivers + 1))
-            self.ax.set_xticklabels(self.drivers_raw, rotation=45, rotation_mode="anchor", ha="right")
+        self.formatXTicks(self.metaData)
 
-        try:
-            index = self.drivers_raw.index("Florian Niedermeier2")
-            self.ax.get_xticklabels()[index].set_fontweight("bold")
-        except ValueError:
-            pass
+        # try:
+        #     index = self.drivers_raw.index("Florian Niedermeier2")
+        #     self.ax.get_xticklabels()[index].set_fontweight("bold")
+        # except ValueError:
+        #     pass
 
         plt.tight_layout()
         plt.show()
@@ -73,45 +64,22 @@ class BoxplotMulti(Base):
     def draw_laptimes(self):
         scatter = []
         for i, lapdata in enumerate(self.race_completed_laps):
-            x = np.random.normal(i + 1, 0.06, len(lapdata))
+            x = np.random.normal(i + 1, 0.03, len(lapdata))
             scatter.append(x)
         for i, data in enumerate(self.race_completed_laps):
             self.ax.scatter(scatter[i], self.race_completed_laps[i],
-                            zorder=4,
+                            zorder=3,
                             alpha=0.5,
                             c="yellow",
-                            s=8
+                            s=15
                             )
 
-    def draw_DISCDISQ(self):
-            self.ax.boxplot(self.race_not_completed_laps,
-                            patch_artist=True,
-                            boxprops=dict(facecolor="#6F6F6F", color="#000000"),
-                            flierprops=dict(markeredgecolor='#000000'),
-                            medianprops=dict(color="#000000", linewidth=2),
-                            whiskerprops=dict(color="#000000"),
-                            capprops=dict(color="#000000"),
-                            zorder=2,
-                            widths=0.7
-                            )
+    def draw_lines(self, y_higherWhisker, y_75, y_median, y_25, y_lowerWhisker, x_coords):
 
-    def draw_medianLine(self):
+        plt.plot(x_coords, y_median, color="#0084F2", zorder=2)
 
-        x1 = None
-        y1 = None
-
-        try:
-            index = self.drivers_raw.index("Florian Niedermeier2")
-            user_boxplot_data = self.race_completed_laps[index]
-            user_median = statistics.median(user_boxplot_data)
-            y1 = [user_median, user_median]
-            x1 = [0, 100]
-
-        except ValueError:
-            pass
-
-        plt.plot(x1, y1, zorder=3, linestyle="dashed", color="#C2C5CA")
-
+        plt.fill_between(x_coords, np.array(y_higherWhisker), np.array(y_lowerWhisker), where=(np.array(y_higherWhisker) > np.array(y_lowerWhisker)), color="#202226", alpha=0.3)
+        plt.fill_between(x_coords, np.array(y_75), np.array(y_25), where=(np.array(y_75) > np.array(y_25)), color="#202226", alpha=1)
 
     def calculateYMaxMin(self, lapdata, roundBase):
 
@@ -182,19 +150,69 @@ class BoxplotMulti(Base):
 
         if options.get("showDISC") == 0:
             number_Of_Drivers_Not_Completed = len([data for data in self.race_not_completed_laps if not not data])
-            self.number_Of_Drivers = self.number_Of_Drivers - number_Of_Drivers_Not_Completed
+            self.number_Of_Races = self.number_Of_Drivers - number_Of_Drivers_Not_Completed
             self.drivers_raw = self.drivers_raw[:-number_Of_Drivers_Not_Completed or None]
-
-        if options.get("showMedianLine") == 1:
-            showMedianLine = True
-        else:
-            showMedianLine = False
 
         if options.get("showMean") == 1:
             showMean = True
-        else:
-            showMean = False
+        else: showMean = False
 
-        return ymin, ymax, interval, showMean, showMedianLine
+        return ymin, ymax, interval, showMean
+
+    def unpackData(self, input):
+        data = []
+        metaData = []
+        for race in input:
+            data.append(input[race]["laps"])
+            metaData.append(input[race]["metaData"])
+
+        return data, metaData
+
+    def calcLines(self, race_completed_laps):
+
+        y_median = []
+        y_25 = []
+        y_75 = []
+        #y_lowerWhisker = []
+        #y_upperWhisker = []
+        x_coords = list(range(1, len(race_completed_laps)+1, 1))
+
+        for lap in race_completed_laps:
+            y_median.append(statistics.median(lap))
+            y_75.append(np.percentile(lap, 75))
+            y_25.append(np.percentile(lap, 25))
+
+        y_higherWhisker = [item.get_ydata()[1] for item in self.boxplot["whiskers"]][1::2]
+        y_lowerWhisker = [item.get_ydata()[1] for item in self.boxplot["whiskers"]][0::2]
+
+        return y_higherWhisker, y_75, y_median, y_25, y_lowerWhisker, x_coords
+
+        #self.ax.get_xticklabels()[index]
+
+    def formatXTicks(self, metaData):
+
+        weather = []
+
+        for data in metaData:
+            temp = data["weather"]["temp_value"]
+            humid = data["weather"]["rel_humidity"]
+            skies = data["weather"]["skies"]
+            type = data["weather"]["type"]
+            wind_dir = data["weather"]["wind_dir"]
+            wind_value = data["weather"]["wind_value"]
+
+            match skies:
+                case 0:
+                    skies = "Clear"
+                case 1:
+                    skies = "Partly cloudy"
+
+            weather.append(f"{int(round(((temp-32)/1.8),0))}°C\n{temp}°F\n{skies}\n{humid}%")
+
+        self.ax.set_xticks(np.arange(1, self.number_Of_Races + 1))
+        self.ax.set_xticklabels(weather)
+
+        pass
+
 
 
