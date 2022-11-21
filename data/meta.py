@@ -1,6 +1,5 @@
 import json
 import requests
-from data.fuzzwah import Fuzzwah
 
 
 class Meta:

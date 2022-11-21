@@ -1,6 +1,5 @@
 import json
 import requests
-from data.fuzzwah import Fuzzwah
 
 
 class LapsMulti:
@@ -10,27 +9,20 @@ class LapsMulti:
 
         self.inputLaps = None
         self.iRacingData = None
-        self.fuzzData = None
         self.carclassid = None
-        self.fuzzInstance = None
 
     def requestLapsMulti(self):
 
         load_success = False
 
         try:
-            self.initFuzzwah()
-            self.iRacingData, self.fuzzData = self.cache_load()
+            self.iRacingData = self.cache_load()
             load_success = True
         except FileNotFoundError:
             print('[laps_multi] Files do not exist')
 
         if not load_success:
-            print('[laps_multi] Requesting subsession from iRacing API and Fuzzwah...')
-
-            # Fuzzwah
-            self.initFuzzwah()
-            self.fuzzData = self.fuzzInstance.requestResultsSimple()[1]
+            print('[laps_multi] Requesting subsession from iRacing API...')
 
             # iRacingAPI
             racesJson = self.session.get('https://members-ng.iracing.com/data/results/lap_chart_data',
@@ -48,33 +40,22 @@ class LapsMulti:
 
             self.cache_save()
 
-        return self.iRacingData, self.fuzzData
+        return self.iRacingData
 
     def cache_load(self):
         fileAPI = open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
-            self.subsession_id) + "_results_lap_chart_data_MULTI.json")
+            self.subsession_id) + "_laps_multi.json")
         APIFile = json.load(fileAPI)
         fileAPI.close()
 
-        fileFuzz = open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
-            self.subsession_id) + "_fuzzwah.json")
-        fuzzFile = json.load(fileFuzz)
-        fileFuzz.close()
-
         print("[laps_multi] Loaded subsession \"" + str(self.subsession_id) + "\" from cache")
 
-        return APIFile, fuzzFile
+        return APIFile
 
     def cache_save(self):
         with open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
-                self.subsession_id) + "_results_lap_chart_data_MULTI.json", "w") as a:
+                self.subsession_id) + "_laps_multi.json", "w") as a:
             json.dump(self.iRacingData, a, indent=2)
-
-        with open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
-                self.subsession_id) + "_fuzzwah.json", "w") as f:
-            json.dump(self.fuzzData, f, indent=2)
 
         print("[laps_multi] Saved subsession \"" + str(self.subsession_id) + "\" to cache")
 
-    def initFuzzwah(self):
-        self.fuzzInstance = Fuzzwah(self.subsession_id)

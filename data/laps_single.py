@@ -1,6 +1,5 @@
 import json
 import requests
-from data.fuzzwah import Fuzzwah
 
 
 class LapsSingle:
@@ -19,8 +18,7 @@ class LapsSingle:
         load_success = False
 
         try:
-            self.initFuzzwah()
-            self.iRacingData, self.fuzzData = self.cache_load()
+            self.iRacingData = self.cache_load()
             load_success = True
         except FileNotFoundError:
             print('[laps_single] Files do not exist')
@@ -29,7 +27,6 @@ class LapsSingle:
             print('[laps_single] Requesting subsession from iRacing API and Fuzzwah...')
 
             # Fuzzwah
-            self.initFuzzwah()
             self.fuzzData = self.fuzzInstance.requestResultsSimple()[1]
 
             # iRacingAPI
@@ -48,7 +45,7 @@ class LapsSingle:
 
             self.cache_save()
 
-        return self.iRacingData, self.fuzzData
+        return self.iRacingData
 
     def cache_load(self):
         fileAPI = open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
@@ -56,25 +53,14 @@ class LapsSingle:
         APIFile = json.load(fileAPI)
         fileAPI.close()
 
-        fileFuzz = open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
-            self.subsession_id) + "_fuzzwah.json")
-        fuzzFile = json.load(fileFuzz)
-        fileFuzz.close()
-
         print("[laps_single] Loaded subsession \"" + str(self.subsession_id) + "\" from cache")
 
-        return APIFile, fuzzFile
+        return APIFile
 
     def cache_save(self):
         with open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
                 self.subsession_id) + "_results_lap_data_SINGLE.json", "w") as a:
             json.dump(self.iRacingData, a, indent=2)
 
-        with open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
-                self.subsession_id) + "_fuzzwah.json", "w") as f:
-            json.dump(self.fuzzData, f, indent=2)
-
         print("[laps_single] Saved subsession \"" + str(self.subsession_id) + "\" to cache")
 
-    def initFuzzwah(self):
-        self.fuzzInstance = Fuzzwah(self.subsession_id)

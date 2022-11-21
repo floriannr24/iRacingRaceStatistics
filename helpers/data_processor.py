@@ -7,19 +7,20 @@ class DataProcessor:
     def __init__(self, subsession_id, session):
         self.subsession_id = self.unpackSubsessionIDs(subsession_id)
         self.session = session
-        self.iRacingData = None
-        self.fuzzData = None
+        self.iRacing_lapdata = None
+        self.iRacing_results = None
 
     def get_boxplotMulti_Data(self):
 
         # get session data from iRacingAPI + FuzzwahAPI
-        self.iRacingData, self.fuzzData = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
+        self.iRacing_lapdata = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
+        self.iRacing_results = Meta(self.subsession_id, self.session).requestMeta()
 
         carclass_id = self.gen_searchUsersCarClass("Florian Niedermeier2")  # search carclass id of user
-        iRacingData_carclass, fuzzData_carclass = self.gen_filterByCarClass(carclass_id)  # get only data for corresponding carclass
-        unique_drivers = self.gen_findUniqueDrivers(iRacingData_carclass)  # find unique drivers in said carclass
+        iRacing_lapdata_carclass, iRacing_results_carclass = self.gen_filterByCarClass(carclass_id)  # get only data for corresponding carclass
+        unique_drivers = self.gen_findUniqueDrivers(iRacing_lapdata_carclass)  # find unique drivers in said carclass
 
-        lapsDict = self.bpm_collectInfo(iRacingData_carclass, unique_drivers)  # collect info in dictionary
+        lapsDict = self.bpm_collectInfo(iRacing_lapdata_carclass, unique_drivers)  # collect info in dictionary
         output = self.gen_sortDictionary(lapsDict)  # sort dictionary by "laps completed" and "finish position"
 
         race_completed_raw = self.bpm_extractLaptimes(output, True)  # extract all data of completed races
@@ -43,7 +44,7 @@ class DataProcessor:
     def get_Delta_Data(self, beforeDrivers, afterDrivers):
 
         # get session data from iRacingAPI + FuzzwahAPI
-        self.iRacingData, self.fuzzData = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
+        self.iRacing_lapdata, self.iRacing_results = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
 
         carclass_id = self.gen_searchUsersCarClass("Florian Niedermeier2")  # search carclass id of user
         iRacingData_carclass, fuzzData_carclass = self.gen_filterByCarClass(carclass_id)  # get only data for corresponding carclass
@@ -80,9 +81,10 @@ class DataProcessor:
     def gen_searchUsersCarClass(self, username):
 
         carclassid = None
-        for results in self.fuzzData:
-            if results["name"] == username:
-                carclassid = results["carclassid"]
+
+        for results in self.iRacing_results["session_results"][2]["results"]:
+            if results["display_name"] == username:
+                carclassid = results["car_class_id"]
                 break
             else:
                 continue
@@ -102,22 +104,22 @@ class DataProcessor:
         return primSortDict
 
     def gen_filterByCarClass(self, carClassIdToFilterFor):
-        fuzzData_new = []
-        fuzzNew_drivers = []
-        iRacingData_new = []
+        iRacing_results_new = []
+        iRacing_results_drivers = []
+        iRacingData_lapdate_new = []
 
-        for results in self.fuzzData:
+        for results in self.iRacing_results["session_results"][2]["results"]:
 
-            if results["carclassid"] == carClassIdToFilterFor:
-                fuzzData_new.append(results)
-                fuzzNew_drivers.append(results["name"])
+            if results["car_class_id"] == carClassIdToFilterFor:
+                iRacing_results_new.append(results)
+                iRacing_results_drivers.append(results["display_name"])
 
-        for drivers in fuzzNew_drivers:
-            for lapdata in self.iRacingData:
+        for drivers in iRacing_results_drivers:
+            for lapdata in self.iRacing_lapdata:
                 if drivers == lapdata["display_name"]:
-                    iRacingData_new.append(lapdata)
+                    iRacingData_lapdate_new.append(lapdata)
 
-        return iRacingData_new, fuzzData_new
+        return iRacingData_lapdate_new, iRacing_results_new
 
     def gen_findUniqueDrivers(self, laps_json):
         unique_drivers = set()
@@ -227,11 +229,11 @@ class DataProcessor:
             intDict["finish_position"] = laps_completed_pos[len(laps_completed_pos) - 1]
             intDict["laps_completed"] = len(laps_completed_pos) - 1
 
-            # add "Running", "Disq" or "Disconnected" to intDict{} via FuzzwahAPI
-            # add "carId" to intDict{} via FuzzwahAPI
-            for fuzz in self.fuzzData:
-                if driver == fuzz["name"]:
-                    intDict["result_status"] = fuzz["out"]
+            # add "Running", "Disq" or "Disconnected" to intDict{}
+            # add "carId" to intDict{}
+            for fuzz in self.iRacing_results["session_results"][2]["results"]:
+                if driver == fuzz["display_name"]:
+                    intDict["result_status"] = fuzz["reason_out"]
 
         return lapsDict
 
@@ -333,7 +335,7 @@ class DataProcessor:
 
             # add "Running", "Disq" or "Disconnected" to intDict{} via FuzzwahAPI
             # add "carId" to intDict{} via FuzzwahAPI
-            for fuzz in self.fuzzData:
+            for fuzz in self.iRacing_results:
                 if driver == fuzz["name"]:
                     intDict["result_status"] = fuzz["out"]
 
