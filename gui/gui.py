@@ -9,6 +9,7 @@ from sessionbuilder.session_builder import SessionBuilder
 class GUI(tk.Frame):
     def __init__(self, root, *args, **kwargs):
         tk.Frame.__init__(self, root, *args, **kwargs)
+        self.root = root
 
         # init session
         my_sessionBuilder = SessionBuilder()
@@ -17,10 +18,10 @@ class GUI(tk.Frame):
 
         # init frames
         self.top = Top(self)
-        self.tab_bpm = Tab_BPM(self)
-        #self.tab_delta = Tab_DELTA(self)
         self.top.pack(side="top", fill="x")
-        self.tab_bpm.pack(side="bottom", fill="x")
+
+        self.bottom = Bottom(self)
+        self.bottom.pack(side="bottom", fill="x")
 
 
 class Top(tk.Frame):
@@ -98,6 +99,33 @@ class Top(tk.Frame):
         self.fillTree(False)
 
 
+class Bottom(tk.Frame):
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+
+        bottom_label = ttk.Label(self, text="Choose type of diagram", font=("Arial", "14"))
+        bottom_label.pack(anchor="w", padx=10, pady=(25, 8))
+
+        style = ttk.Style(self)
+        style.configure('lefttab.TNotebook', tabposition="wn")
+
+        self.notebook = Notebook(self, style="lefttab.TNotebook", padding=10)
+
+
+class Notebook(ttk.Notebook):
+    def __init__(self, parent, style, padding):
+        super().__init__(parent, style=style, padding=padding)
+        self.parent = parent
+
+        self.tab1 = Tab_BPM(self)
+        self.tab2 = Tab_DELTA(self)
+
+        self.add(self.tab1, text='bpm')
+        self.add(self.tab2, text="delta")
+        self.pack(side="left", expand=1, fill="x")
+
+
 class Tab_BPM(tk.Frame):
     def __init__(self, parent):
         super().__init__()
@@ -110,83 +138,54 @@ class Tab_BPM(tk.Frame):
         self.mean_val = tk.IntVar()
         self.median_line_val = tk.IntVar()
 
-
-        bottom_label = ttk.Label(self, text="Choose type of diagram", font=("Arial", "14"))
-        bottom_label.pack(anchor="w", padx=10, pady=(25, 8))
-
-        style = ttk.Style(self)
-        style.configure('lefttab.TNotebook', tabposition="ws")
-
-        frame_notebook = ttk.Notebook(self, style='lefttab.TNotebook', padding=10)
-
-        self.tab1 = ttk.Frame(frame_notebook)
-        tab2 = ttk.Frame(frame_notebook)
-        tab3 = ttk.Frame(frame_notebook)
-        tab4 = ttk.Frame(frame_notebook)
-        tab5 = ttk.Frame(frame_notebook)
-
-        frame_notebook.add(self.tab1, text='bpm')
-        frame_notebook.add(tab2, text='bps')
-        frame_notebook.add(tab3, text='delta')
-        frame_notebook.add(tab4, text='delta2avg')
-        frame_notebook.add(tab5, text='delta2avgsingle')
-
-        frame_notebook.pack(side="left", expand=1, fill="x")
-
-        # self.tab1.columnconfigure(0, weight=1)
-        # self.tab1.columnconfigure(1, weight=3)
-        # self.tab1.columnconfigure(2, weight=1)
-        # self.tab1.columnconfigure(3, weight=1)
-
-        tab1_title = ttk.Label(self.tab1, text="Boxplot (multiple players)", font=("Arial", "11"))
+        tab1_title = tk.Label(self, text="Boxplot (multiple players)", font=("Arial", "11"))
         tab1_title.grid(column=0, row=0, padx=3, pady=5)
 
-        self.start_button_bpm = tk.Button(self.tab1, text="Start", command=self.start_bpm, width=20, height=2)
+        self.start_button_bpm = tk.Button(self, text="Start", command=self.start_bpm, width=20, height=2)
         self.start_button_bpm.grid(column=0, row=0, sticky="s", padx=20, pady=10, rowspan=6)
 
-        self.optional_cb = ttk.Checkbutton(self.tab1, text="Options:", variable=self.optional,
-                                           command=self.activate_Options)
+        self.optional_cb = ttk.Checkbutton(self, text="Options:", variable=self.optional, command=self.activate_Options)
         self.optional_cb.grid(column=2, row=0)
 
-        sep1 = ttk.Separator(self.tab1, orient="vertical")
+        sep1 = ttk.Separator(self, orient="vertical")
         sep1.grid(column=1, row=0, rowspan=7, sticky="ns", padx=(0, 20))
 
-        self.setYMinMax_cb = ttk.Checkbutton(self.tab1, text="Set y-axis:", variable=self.setYMinMax_val,
+        self.setYMinMax_cb = ttk.Checkbutton(self, text="Set y-axis:", variable=self.setYMinMax_val,
                                              command=self.activate_yminymax)
         self.setYMinMax_cb.grid(column=2, row=1, sticky="w")
-        self.ymin_entry = ttk.Entry(self.tab1, width=8)
+        self.ymin_entry = ttk.Entry(self, width=8)
         self.ymin_entry.grid(column=3, row=1, sticky="w")
         self.ymin_entry.config(state="disabled")
-        self.ymax_entry = ttk.Entry(self.tab1, width=8)
+        self.ymax_entry = ttk.Entry(self, width=8)
         self.ymax_entry.grid(column=4, row=1, columnspan=2, padx=5)
         self.ymax_entry.config(state="disabled")
 
-        self.setYAxisInterval_cb = ttk.Checkbutton(self.tab1, text="Set y-axis interval:",
+        self.setYAxisInterval_cb = ttk.Checkbutton(self, text="Set y-axis interval:",
                                                    variable=self.setYInterval_val, command=self.activate_interval)
         self.setYAxisInterval_cb.grid(column=2, row=2, sticky="w")
-        self.yAxisInterval_combo = ttk.Combobox(self.tab1, width=5)
+        self.yAxisInterval_combo = ttk.Combobox(self, width=5)
         self.yAxisInterval_combo.grid(column=3, row=2, sticky="w")
         self.yAxisInterval_combo["state"] = "disabled"
         self.yAxisInterval_combo["values"] = ("2.0", "1.0", "0.5", "0.25")
         self.yAxisInterval_combo.current(2)
 
-        self.showDISCDISQ_cb = ttk.Checkbutton(self.tab1, text="Show disconnected / disqualified drivers",
+        self.showDISCDISQ_cb = ttk.Checkbutton(self, text="Show disconnected / disqualified drivers",
                                                variable=self.DISQDISC_val)
         self.showDISCDISQ_cb.grid(column=2, row=3, sticky="w")
 
-        self.showDots_cb = ttk.Checkbutton(self.tab1, text="Show individual laptimes", variable=self.dots_val)
+        self.showDots_cb = ttk.Checkbutton(self, text="Show individual laptimes", variable=self.dots_val)
         self.showDots_cb.grid(column=2, row=4, sticky="w")
 
-        self.showMean_cb = ttk.Checkbutton(self.tab1, text="Show median line for user", variable=self.median_line_val)
+        self.showMean_cb = ttk.Checkbutton(self, text="Show median line for user", variable=self.median_line_val)
         self.showMean_cb.grid(column=2, row=5, sticky="w")
 
-        self.showMean_cb = ttk.Checkbutton(self.tab1, text="Show mean", variable=self.mean_val)
+        self.showMean_cb = ttk.Checkbutton(self, text="Show mean", variable=self.mean_val)
         self.showMean_cb.grid(column=2, row=6, sticky="w")
 
-        sep2 = ttk.Separator(self.tab1, orient="vertical")
+        sep2 = ttk.Separator(self, orient="vertical")
         sep2.grid(column=6, row=0, rowspan=7, sticky="ns")
 
-        tab1_description = ttk.Label(self.tab1,
+        tab1_description = ttk.Label(self,
                                      text="Creates a diagram with multiple boxplots. Every driver who took part in \n"
                                           "the race session is displayed as a boxplot. In multiclass races, only one \n"
                                           "carclass (and its drivers) is displayed. The carclass is determined by what \n"
@@ -197,7 +196,7 @@ class Tab_BPM(tk.Frame):
 
     def activate_Options(self):
 
-        listOfWidgets = [x for x in self.tab1.winfo_children() if x["text"] != "Options:" if x["text"] != "Start"]
+        listOfWidgets = [x for x in self.winfo_children() if x["text"] != "Options:" if x["text"] != "Start"]
 
         for child in listOfWidgets:
             if str(child["state"]) == "disabled":
@@ -225,7 +224,7 @@ class Tab_BPM(tk.Frame):
         if self.parent.top.radio.get() == 0:
 
             try:
-                treeItem_Selected = self.parent.tree.item(self.parent.tree.focus())
+                treeItem_Selected = self.parent.top.tree.item(self.parent.top.tree.focus())
                 treeItem_SubsessionID = treeItem_Selected["values"][7]
                 Diagram([treeItem_SubsessionID], self.parent.session, config)
             except IndexError:
@@ -235,7 +234,7 @@ class Tab_BPM(tk.Frame):
             if not self.parent.top.entry2.get():
                 print("No value entered")
             else:
-                Diagram([self.parent.entry2.get()], self.parent.session, config)
+                Diagram([self.parent.top.entry2.get()], self.parent.session, config)
 
     def packConfig(self):
 
