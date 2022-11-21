@@ -16,10 +16,10 @@ class results_multi:
             self.iRacingData = self.cache_load()
             load_success = True
         except FileNotFoundError:
-            print('[meta] Files do not exist')
+            print('[results_multi] Files do not exist')
 
         if not load_success:
-            print('[meta] Requesting meta for subsession from iRacing API...')
+            print('[results_multi] Requesting meta for subsession from iRacing API...')
 
             # iRacingAPI
             self.iRacingData = self.session.get('https://members-ng.iracing.com/data/results/get',
@@ -45,7 +45,7 @@ class results_multi:
         APIFile = json.load(fileAPI)
         fileAPI.close()
 
-        print("[meta] Loaded subsession (meta) \"" + str(self.subsession_id) + "\" from cache")
+        print("[results_multi] Loaded subsession (meta) \"" + str(self.subsession_id) + "\" from cache")
 
         return APIFile
 
@@ -54,5 +54,5 @@ class results_multi:
                 self.subsession_id) + "_results_multi.json", "w") as a:
             json.dump(self.iRacingData, a, indent=2)
 
-        print("[meta] Saved subsession (meta) \"" + str(self.subsession_id) + "\" to cache")
+        print("[results_multi] Saved subsession (meta) \"" + str(self.subsession_id) + "\" to cache")
 

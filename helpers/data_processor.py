@@ -9,13 +9,13 @@ class DataProcessor:
         self.iRacing_lapdata = None
         self.iRacing_results = None
 
-    def get_boxplotMulti_Data(self):
+    def get_boxplotMulti_Data(self, name):
 
         # get session data from iRacingAPI + FuzzwahAPI
         self.iRacing_lapdata = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
         self.iRacing_results = results_multi(self.subsession_id, self.session).requestResultsMulti()
 
-        carclass_id = self.gen_searchUsersCarClass("Florian Niedermeier2")  # search carclass id of user
+        carclass_id = self.gen_searchUsersCarClass(name)  # search carclass id of user
         iRacing_lapdata_carclass, iRacing_results_carclass = self.gen_filterByCarClass(carclass_id)  # get only data for corresponding carclass
         unique_drivers = self.gen_findUniqueDrivers(iRacing_lapdata_carclass)  # find unique drivers in said carclass
 
@@ -57,7 +57,7 @@ class DataProcessor:
 
         return output
 
-    def get_Pace_Data(self):
+    def get_Pace_Data(self, name):
 
         outerDict = {}
 
@@ -65,7 +65,7 @@ class DataProcessor:
             irData = LapsMulti(id, self.session).requestLapsMulti()
             metaData = results_multi(id, self.session).requestResultsMulti()
 
-            output = self.pace_collectInfo(irData, "Florian Niedermeier2")
+            output = self.pace_collectInfo(irData, name)
             output = self.gen_scanForInvalidTypes(output, -1, None)
 
             data = {}
