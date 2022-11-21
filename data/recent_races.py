@@ -41,10 +41,10 @@ class RecentRaces:
                 self.iRacingData = self.cache_load()
                 load_success = True
             except FileNotFoundError:
-                print('[recent_race] File does not exist')
+                print('[recent_races] File does not exist')
 
         if not load_success:
-            print('[recent_race] Requesting recent races from iRacing API...')
+            print('[recent_races] Requesting recent races from iRacing API...')
 
             # iRacingAPI
             racesJson = self.session.get('https://members-ng.iracing.com/data/stats/member_recent_races')
@@ -72,9 +72,3 @@ class RecentRaces:
             json.dump(self.iRacingData, a, indent=2)
 
         print("[recent_races] Saved recent races to cache")
-
-        # self.subsession_id = racesDict_final["subsession_id"]
-        # self.series_name = racesDict_final["series_name"]
-        # self.winner_name = racesDict_final["winner_name"]
-        # self.track_name = racesDict_final["track"]["track_name"]
-        # self.session_start_time = racesDict_final["session_start_time"]

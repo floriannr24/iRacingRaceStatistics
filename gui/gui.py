@@ -240,7 +240,7 @@ class Tab_BPM(tk.Frame):
     def packConfig_bpm(self):
 
         return Configurator("bpm",
-                            "Florian_Niedermeier",
+                            "Florian Niedermeier2",
                             setYAxis=self.setYMinMax_val.get(),
                             minVal=float(self.ymin_entry.get() or 0),
                             maxVal=float(self.ymax_entry.get() or 0),
