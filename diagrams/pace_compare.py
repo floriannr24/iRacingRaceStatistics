@@ -1,9 +1,7 @@
 import statistics
 from datetime import timedelta
-
 import numpy as np
 from matplotlib import pyplot as plt
-
 from diagrams.base import Base
 
 

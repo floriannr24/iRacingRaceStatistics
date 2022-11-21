@@ -1,5 +1,4 @@
 from data.laps_multi import LapsMulti
-from data.laps_single import LapsSingle
 from data.results_multi import results_multi
 
 
@@ -14,7 +13,7 @@ class DataProcessor:
 
         # get session data from iRacingAPI + FuzzwahAPI
         self.iRacing_lapdata = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
-        self.iRacing_results = results_multi(self.subsession_id, self.session).requestMeta()
+        self.iRacing_results = results_multi(self.subsession_id, self.session).requestResultsMulti()
 
         carclass_id = self.gen_searchUsersCarClass("Florian Niedermeier2")  # search carclass id of user
         iRacing_lapdata_carclass, iRacing_results_carclass = self.gen_filterByCarClass(carclass_id)  # get only data for corresponding carclass
@@ -44,7 +43,7 @@ class DataProcessor:
     def get_Delta_Data(self, beforeDrivers, afterDrivers):
 
         # get session data from iRacingAPI + FuzzwahAPI
-        self.iRacing_lapdata, self.iRacing_results = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
+        self.iRacing_lapdata = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
 
         carclass_id = self.gen_searchUsersCarClass("Florian Niedermeier2")  # search carclass id of user
         iRacingData_carclass, fuzzData_carclass = self.gen_filterByCarClass(carclass_id)  # get only data for corresponding carclass
@@ -63,10 +62,10 @@ class DataProcessor:
         outerDict = {}
 
         for i, id in enumerate(self.subsession_id):
-            irData = LapsSingle(id, self.session).requestLapsSingle()
+            irData = LapsMulti(id, self.session).requestLapsMulti()
             metaData = results_multi(id, self.session).requestResultsMulti()
 
-            output = self.pace_collectInfo(irData)
+            output = self.pace_collectInfo(irData, "Florian Niedermeier2")
             output = self.gen_scanForInvalidTypes(output, -1, None)
 
             data = {}
@@ -341,14 +340,15 @@ class DataProcessor:
 
     ####################################################################
 
-    def pace_collectInfo(self, irdata):
+    def pace_collectInfo(self, irdata, driverName):
 
         intList = []
 
         for lap in irdata:
-            laptime = lap["lap_time"]
-            laptime = self.gen_convertTimeformatToSeconds(laptime)
-            intList.append(laptime)
+            if lap["display_name"] == driverName:
+                laptime = lap["lap_time"]
+                laptime = self.gen_convertTimeformatToSeconds(laptime)
+                intList.append(laptime)
 
         return intList
 
