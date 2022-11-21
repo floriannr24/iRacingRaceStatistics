@@ -2,13 +2,13 @@ import json
 import requests
 
 
-class Meta:
+class results_multi:
     def __init__(self, subsession_id, session):
         self.subsession_id = subsession_id
         self.session = session
         self.iRacingData = None
 
-    def requestMeta(self):
+    def requestResultsMulti(self):
 
         load_success = False
 
@@ -26,15 +26,12 @@ class Meta:
                                            params={"subsession_id": self.subsession_id, "simsession_number": "0"})
             self.iRacingData = requests.get(self.iRacingData.json()["link"]).json()
 
-            print(self.iRacingData)
-
             intDict = {}
 
             intDict["series_name"] = self.iRacingData["series_name"]
             intDict["track"] = self.iRacingData["track"]
             intDict["weather"] = self.iRacingData["weather"]
             intDict["session_results"] = self.iRacingData["session_results"]
-
 
             self.iRacingData = intDict
 

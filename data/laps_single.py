@@ -26,9 +26,6 @@ class LapsSingle:
         if not load_success:
             print('[laps_single] Requesting subsession from iRacing API and Fuzzwah...')
 
-            # Fuzzwah
-            self.fuzzData = self.fuzzInstance.requestResultsSimple()[1]
-
             # iRacingAPI
             racesJson = self.session.get('https://members-ng.iracing.com/data/results/lap_data',
                                          params={"subsession_id": self.subsession_id, "simsession_number": "0"})

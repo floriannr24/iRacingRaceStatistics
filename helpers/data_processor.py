@@ -1,6 +1,6 @@
 from data.laps_multi import LapsMulti
 from data.laps_single import LapsSingle
-from data.meta import Meta
+from data.results_multi import results_multi
 
 
 class DataProcessor:
@@ -14,7 +14,7 @@ class DataProcessor:
 
         # get session data from iRacingAPI + FuzzwahAPI
         self.iRacing_lapdata = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
-        self.iRacing_results = Meta(self.subsession_id, self.session).requestMeta()
+        self.iRacing_results = results_multi(self.subsession_id, self.session).requestMeta()
 
         carclass_id = self.gen_searchUsersCarClass("Florian Niedermeier2")  # search carclass id of user
         iRacing_lapdata_carclass, iRacing_results_carclass = self.gen_filterByCarClass(carclass_id)  # get only data for corresponding carclass
@@ -63,8 +63,8 @@ class DataProcessor:
         outerDict = {}
 
         for i, id in enumerate(self.subsession_id):
-            irData, fuzzData = LapsSingle(id, self.session).requestLapsSingle()
-            metaData = Meta(id, self.session).requestMeta()
+            irData = LapsSingle(id, self.session).requestLapsSingle()
+            metaData = results_multi(id, self.session).requestResultsMulti()
 
             output = self.pace_collectInfo(irData)
             output = self.gen_scanForInvalidTypes(output, -1, None)
@@ -91,10 +91,8 @@ class DataProcessor:
         return carclassid
 
     def gen_sortDictionary(self, lapsDict):
-        secSortDict = list(
-            sorted(lapsDict, key=lambda p: p["finish_position"]))  # secondary sort by key "finish_position"
-        primSortDict = list(sorted(secSortDict, key=lambda p: p["laps_completed"],
-                                   reverse=True))  # primary sort by key "laps_completed", descending
+        secSortDict = list(sorted(lapsDict, key=lambda p: p["finish_position"]))  # secondary sort by key "finish_position"
+        primSortDict = list(sorted(secSortDict, key=lambda p: p["laps_completed"], reverse=True))  # primary sort by key "laps_completed", descending
 
         for lapdata in primSortDict:
             if lapdata["finish_position"] == 0:
