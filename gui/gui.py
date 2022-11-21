@@ -130,6 +130,8 @@ class Tab_BPM(tk.Frame):
     def __init__(self, parent):
         super().__init__()
         self.parent = parent
+        self.top = parent.parent.parent.top
+        self.session = parent.parent.parent.session
         self.optional = tk.IntVar()
         self.setYMinMax_val = tk.IntVar()
         self.setYInterval_val = tk.IntVar()
@@ -221,20 +223,20 @@ class Tab_BPM(tk.Frame):
     def start_bpm(self):
         config = self.packConfig()
 
-        if self.parent.top.radio.get() == 0:
+        if self.top.radio.get() == 0:
 
             try:
-                treeItem_Selected = self.parent.top.tree.item(self.parent.top.tree.focus())
+                treeItem_Selected = self.top.tree.item(self.top.tree.focus())
                 treeItem_SubsessionID = treeItem_Selected["values"][7]
-                Diagram([treeItem_SubsessionID], self.parent.session, config)
+                Diagram([treeItem_SubsessionID], self.session, config)
             except IndexError:
                 print("No value selected")
 
-        if self.parent.top.radio.get() == 1:
+        if self.top.radio.get() == 1:
             if not self.parent.top.entry2.get():
                 print("No value entered")
             else:
-                Diagram([self.parent.top.entry2.get()], self.parent.session, config)
+                Diagram([self.top.entry2.get()], self.session, config)
 
     def packConfig(self):
 
