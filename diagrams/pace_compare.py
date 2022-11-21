@@ -52,20 +52,19 @@ class PaceCompare(Base):
 
         self.formatXTicks(self.metaData)
 
-        # try:
-        #     index = self.drivers_raw.index("Florian Niedermeier2")
-        #     self.ax.get_xticklabels()[index].set_fontweight("bold")
-        # except ValueError:
-        #     pass
-
         plt.tight_layout()
         plt.show()
 
     def draw_laptimes(self):
+
+        showLapCountLabels = False
+        showMedianLabels = True
+
         scatter = []
         for i, lapdata in enumerate(self.race_completed_laps):
             x = np.random.normal(i + 1, 0.03, len(lapdata))
             scatter.append(x)
+
         for i, data in enumerate(self.race_completed_laps):
             self.ax.scatter(scatter[i], self.race_completed_laps[i],
                             zorder=3,
@@ -73,6 +72,15 @@ class PaceCompare(Base):
                             c="yellow",
                             s=15
                             )
+            for x, txt in enumerate(range(1, len(data))):
+                self.ax.annotate(round(txt, 2), (scatter[i][x]+0.1, self.race_completed_laps[i][x]), color="yellow", fontsize=8, visible=showLapCountLabels)
+
+            self.ax.annotate(round(statistics.median(data), 2), (i+1.2, round(statistics.median(data), 2)),
+                             color="#B3DFFF",
+                             fontsize=11,
+                             visible=showMedianLabels,
+                             weight="bold"
+                             )
 
     def draw_lines(self, y_higherWhisker, y_75, y_median, y_25, y_lowerWhisker, x_coords):
 
@@ -173,8 +181,6 @@ class PaceCompare(Base):
         y_median = []
         y_25 = []
         y_75 = []
-        #y_lowerWhisker = []
-        #y_upperWhisker = []
         x_coords = list(range(1, len(race_completed_laps)+1, 1))
 
         for lap in race_completed_laps:
@@ -186,8 +192,6 @@ class PaceCompare(Base):
         y_lowerWhisker = [item.get_ydata()[1] for item in self.boxplot["whiskers"]][0::2]
 
         return y_higherWhisker, y_75, y_median, y_25, y_lowerWhisker, x_coords
-
-        #self.ax.get_xticklabels()[index]
 
     def formatXTicks(self, metaData):
 
@@ -206,6 +210,8 @@ class PaceCompare(Base):
                     skies = "Clear"
                 case 1:
                     skies = "Partly cloudy"
+                case 2:
+                    skies = "Mostly cloudy"
 
             weather.append(f"{int(round(((temp-32)/1.8),0))}°C\n{temp}°F\n{skies}\n{humid}%")
 

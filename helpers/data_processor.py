@@ -73,8 +73,6 @@ class DataProcessor:
             data["laps"] = output
             data["metaData"] = metaData
 
-        print(outerDict)
-
         return outerDict
 
     ####################################################################

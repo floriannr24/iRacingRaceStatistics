@@ -1,6 +1,4 @@
 import json
-import requests
-import numpy
 from ir_webstats_rc.client import iRWebStats
 
 class Fuzzwah:

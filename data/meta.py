@@ -27,11 +27,15 @@ class Meta:
                                            params={"subsession_id": self.subsession_id, "simsession_number": "0"})
             self.iRacingData = requests.get(self.iRacingData.json()["link"]).json()
 
+            print(self.iRacingData)
+
             intDict = {}
 
             intDict["series_name"] = self.iRacingData["series_name"]
             intDict["track"] = self.iRacingData["track"]
             intDict["weather"] = self.iRacingData["weather"]
+            intDict["session_results"] = self.iRacingData["session_results"]
+
 
             self.iRacingData = intDict
 
