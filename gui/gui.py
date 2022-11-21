@@ -195,7 +195,6 @@ class Tab_BPM(tk.Frame):
                                      , font=("Arial", "10"))
         tab1_description.grid(column=7, row=0, rowspan=6, padx=5, pady=5)
 
-
     def activate_Options(self):
 
         listOfWidgets = [x for x in self.winfo_children() if x["text"] != "Options:" if x["text"] != "Start"]
@@ -221,7 +220,7 @@ class Tab_BPM(tk.Frame):
             self.yAxisInterval_combo["state"] = "disabled"
 
     def start_bpm(self):
-        config = self.packConfig()
+        config = self.packConfig_bpm()
 
         if self.top.radio.get() == 0:
 
@@ -238,10 +237,10 @@ class Tab_BPM(tk.Frame):
             else:
                 Diagram([self.top.entry2.get()], self.session, config)
 
-    def packConfig(self):
+    def packConfig_bpm(self):
 
         return Configurator("bpm",
-                            "Florian Niedermeier2",
+                            "Florian_Niedermeier",
                             setYAxis=self.setYMinMax_val.get(),
                             minVal=float(self.ymin_entry.get() or 0),
                             maxVal=float(self.ymax_entry.get() or 0),
