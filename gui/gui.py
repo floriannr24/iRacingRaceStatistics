@@ -1,6 +1,6 @@
 import tkinter as tk
 import datetime
-from time import tzname
+import configparser
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from data.recent_races import RecentRaces
@@ -18,6 +18,7 @@ class GUI(tk.Frame):
 
         # init timeinfo
         self.timeinfo = Timeinfo()
+        self.timezone = self.loadTimzeone()
 
         # init session
         my_sessionBuilder = SessionBuilder()
@@ -40,6 +41,12 @@ class GUI(tk.Frame):
         self.root.update_idletasks()
         self.window_height = self.root.winfo_height() + 1  # small adjustment so there is no pixelline left
 
+    def loadTimzeone(self):
+        try:
+            return SettingsFile().loadSettingsFile()["general"]["timezone"]
+        except KeyError:
+            return None
+
 
 class Timeinfo:
     def __init__(self):
@@ -53,11 +60,14 @@ class Timeinfo:
             dict["country"] = c[0]
             dict["country_code"] = c[1]
             try:
-                tzint = []
+                tzint_lbl = []
+                tzint_val = []
                 for tz in pytz.country_timezones[c[1]]:
+                    tzint_val.append(tz)
+                    dict["timezones_values"] = tzint_val
                     td = self.calcTimeDifference(tz)
-                    tzint.append(f"(UTC {td}) {tz}")
-                dict["timezones"] = tzint
+                    tzint_lbl.append(f"(UTC {td}) {tz}")
+                dict["timezones_label"] = tzint_lbl
             except KeyError:
                 continue
             tzList.append(dict)
@@ -72,22 +82,43 @@ class Timeinfo:
         td = divmod(duration, 3600)[0]
 
         if td >= 0:
-            td = "+"+str(td)+"0"
+            td = "+" + str(td) + "0"
         else:
-            td = str(td)+"0"
-
+            td = str(td) + "0"
         if len(td) < 6:
             td = td[0:1] + "0" + td[1:]
-
         td = td.replace(".", ":")
 
         return td
 
     def convertToTimezone(self, string, timezone):
+        if not timezone:
+            timezone = "UTC"
+
         time = datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%SZ')
         utc = time.replace(tzinfo=pytz.UTC)
         dt_tz = utc.astimezone(pytz.timezone(timezone))
         return dt_tz.strftime('%Y-%m-%d  %H:%M:%S')
+
+
+class SettingsFile:
+    def __init__(self):
+        self.settings = configparser.ConfigParser()
+
+    def saveSettingsFile(self, **options):
+
+        if not "general" in self.settings:
+            self.settings.add_section("general")
+
+        for opt, value in options.items():
+            self.settings['general'][opt] = value
+
+        with open("settings.ini", "w") as file:
+            self.settings.write(file)
+
+    def loadSettingsFile(self):
+        self.settings.read("settings.ini")
+        return self.settings
 
 
 class Menubar:
@@ -101,10 +132,10 @@ class Menubar:
 
         menubar.add_command(
             label="Settings",
-            command=self.open_settings
+            command=self.openSettings_window
         )
 
-    def open_settings(self):
+    def openSettings_window(self):
         self.window_settings = Settings(self.parent)
         self.window_settings.geometry("300x300")
         self.window_settings.propagate(False)
@@ -116,6 +147,9 @@ class Settings(tk.Toplevel):
         self.countryData = None
         self.root = root
         self.location = None
+        self.initProcess = True
+        self.tz_list = None
+        self.settingsFile = SettingsFile()
 
         location_label = tk.Label(self, text="Location:")
         location_label.grid(column=0, row=0)
@@ -124,6 +158,7 @@ class Settings(tk.Toplevel):
         self.location_combo.config(validate="focus", validatecommand=self.insertTimezones)
         self.location_combo.grid(column=1, row=0)
         self.location_combo["values"] = self.insertCountries()
+        self.location_combo.current(self.loadLocation())
 
         timezone_label = tk.Label(self, text="Timezone:")
         timezone_label.grid(column=0, row=1)
@@ -134,6 +169,11 @@ class Settings(tk.Toplevel):
 
         self.insertTimezones()
 
+        self.save_button = ttk.Button(self, text="Save", command=self.saveSettings)
+        self.save_button.grid(column=0, row=3)
+
+        self.loadTz()
+
     def insertCountries(self):
         self.countryData = self.root.timeinfo.getCountryData()
         return [f"{c['country']}" for c in self.countryData]
@@ -141,9 +181,38 @@ class Settings(tk.Toplevel):
     def insertTimezones(self):
         for cd in self.countryData:
             if cd["country"] == self.location_combo.get():
-                self.timezone_combo["values"] = cd["timezones"]
+                self.tz_list = cd
+                self.timezone_combo["values"] = cd["timezones_label"]
                 self.timezone_combo.current(0)
         return True
+
+    def saveSettings(self):
+
+        # clean timezone value
+        tz = self.timezone_combo.get()
+        tz = tz[tz.index(")")+2:len(tz)]
+
+        self.settingsFile.saveSettingsFile(
+            location=self.location_combo.get(),
+            timezone=tz
+            )
+        self.root.timezone = tz
+        self.destroy()
+
+    def loadLocation(self):
+        try:
+            loc = self.settingsFile.loadSettingsFile()["general"]["location"]
+            return self.insertCountries().index(loc)
+        except KeyError:
+            return 0
+
+    def loadTz(self):
+        try:
+            tz = self.settingsFile.loadSettingsFile()["general"]["timezone"]
+            x = self.tz_list["timezones_values"].index(tz)
+            self.timezone_combo.current(x)
+        except KeyError:
+            return 0
 
 
 class Top(tk.Frame):
@@ -167,7 +236,7 @@ class Top(tk.Frame):
         columnsTree = ("time", "series", "track", "start_pos", "finish_pos", "winner", "sof", "subsession_id")
         self.tree = ttk.Treeview(self, columns=columnsTree, show="headings", height=5, selectmode="browse")
 
-        self.tree.heading("time", text="Time (GMT)")
+        self.tree.heading("time", text="Time")
         self.tree.heading("series", text="Series")
         self.tree.heading("track", text="Track")
         self.tree.heading("start_pos", text="Start")
@@ -203,8 +272,7 @@ class Top(tk.Frame):
         tree_data = RecentRaces(self.session).get_RecentRaces_Data(fetchFromCache)
 
         for data in tree_data:
-            data['session_start_time'] = self.parent.timeinfo.convertToTimezone(data['session_start_time'],
-                                                                                'Europe/Berlin')
+            data['session_start_time'] = self.parent.timeinfo.convertToTimezone(data['session_start_time'], self.parent.timezone)
 
         tree_values = [
             (f"{x['session_start_time']}", f"{x['series_name']}", f"{x['track_name']}", f"{x['start_position']}",
@@ -217,6 +285,8 @@ class Top(tk.Frame):
         return tree_values
 
     def refresh_table(self):
+        for data in self.tree.get_children():
+            self.tree.delete(data)
         self.fillTree(False)
 
 
