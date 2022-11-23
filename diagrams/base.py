@@ -5,7 +5,7 @@ class Base:
 
     def __init__(self, input, px_width, px_height):
         self.input = input
-        self.fig, self.ax = plt.subplots(nrows=1, ncols=1, figsize=(px_width / 100, px_height / 100))
+        self.fig, self.ax = plt.subplots(figsize=(px_width / 100, px_height / 100))
 
         # define color scheme
         self.ax_color = "#2F3136"

@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from data.recent_races import RecentRaces
 from helpers.diagram import Diagram, Configurator
 from sessionbuilder.session_builder import SessionBuilder
@@ -10,18 +10,47 @@ class GUI(tk.Frame):
     def __init__(self, root, *args, **kwargs):
         tk.Frame.__init__(self, root, *args, **kwargs)
         self.root = root
+        self.window_height = None
 
         # init session
         my_sessionBuilder = SessionBuilder()
         my_sessionBuilder.authenticate()
         self.session = my_sessionBuilder.session
 
+        # init menubar
+        self.menubar = Menubar(self)
+
         # init frames
+        self.canvas = Canvas(self)
+        self.canvas.pack(side="right")
+
         self.top = Top(self)
-        self.top.pack(side="top", fill="x")
+        self.top.pack(side="top")
 
         self.bottom = Bottom(self)
-        self.bottom.pack(side="bottom", fill="x")
+        self.bottom.pack(side="bottom")
+
+        self.root.update_idletasks()
+
+        self.window_height = self.root.winfo_height() + 1  # small adjustment so there is no pixelline left
+
+class Menubar:
+    def __init__(self, parent):
+        self.parent = parent
+        self.parent.root.option_add('*tearOff', False)
+
+        menubar = tk.Menu(self.parent.root)
+        self.parent.root.config(menu=menubar)
+        file_menu = tk.Menu(menubar)
+
+        menubar.add_cascade(
+            label="Settings",
+            menu=file_menu,
+            command=self.open_settings
+        )
+
+    def open_settings(self):
+        pass
 
 
 class Top(tk.Frame):
@@ -35,8 +64,6 @@ class Top(tk.Frame):
         self.session = self.parent.session
 
         # Top frame
-        self.columnconfigure(0, weight=0)
-        self.columnconfigure(1, weight=5)
 
         top_label = ttk.Label(self, text="Choose race session", font=("Arial", "14"))
         top_label.grid(column=0, row=0, padx=10, pady=10, sticky="w", columnspan=2)
@@ -99,6 +126,21 @@ class Top(tk.Frame):
         self.fillTree(False)
 
 
+class Canvas(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(width=400)
+        self.parent = parent
+        self.canvas = None
+
+    def addToCanvas(self, fig):
+        if self.canvas:
+            self.canvas.get_tk_widget().pack_forget()
+
+        if fig:
+            self.canvas = FigureCanvasTkAgg(fig, master=self)
+            self.canvas.get_tk_widget().pack()
+
+
 class Bottom(tk.Frame):
     def __init__(self, parent):
         super().__init__()
@@ -152,8 +194,7 @@ class Tab_BPM(tk.Frame):
         sep1 = ttk.Separator(self, orient="vertical")
         sep1.grid(column=1, row=0, rowspan=7, sticky="ns", padx=(0, 20))
 
-        self.setYMinMax_cb = ttk.Checkbutton(self, text="Set y-axis:", variable=self.setYMinMax_val,
-                                             command=self.activate_yminymax)
+        self.setYMinMax_cb = ttk.Checkbutton(self, text="Set y-axis:", variable=self.setYMinMax_val, command=self.activate_yminymax)
         self.setYMinMax_cb.grid(column=2, row=1, sticky="w")
         self.ymin_entry = ttk.Entry(self, width=8)
         self.ymin_entry.grid(column=3, row=1, sticky="w")
@@ -227,7 +268,9 @@ class Tab_BPM(tk.Frame):
             try:
                 treeItem_Selected = self.top.tree.item(self.top.tree.focus())
                 treeItem_SubsessionID = treeItem_Selected["values"][7]
-                Diagram([treeItem_SubsessionID], self.session, config)
+                diagram = Diagram([treeItem_SubsessionID], self.session, config)
+                self.top.parent.canvas.addToCanvas(diagram.data.fig)
+
             except IndexError:
                 print("No value selected")
 
@@ -250,8 +293,8 @@ class Tab_BPM(tk.Frame):
                             showLaptimes=self.dots_val.get(),
                             showMedianLine=self.median_line_val.get(),
                             showMean=self.mean_val.get(),
-                            px_width=800,
-                            px_height=600
+                            px_width=500,
+                            px_height=self.top.parent.window_height
                             )
 
 

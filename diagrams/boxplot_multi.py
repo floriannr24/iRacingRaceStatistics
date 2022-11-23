@@ -5,6 +5,7 @@ import numpy as np
 
 from diagrams.base import Base
 
+
 # todo: iRating next to names?
 
 class BoxplotMulti(Base):
@@ -84,16 +85,16 @@ class BoxplotMulti(Base):
                             )
 
     def draw_DISCDISQ(self):
-            self.ax.boxplot(self.race_not_completed_laps,
-                            patch_artist=True,
-                            boxprops=dict(facecolor="#6F6F6F", color="#000000"),
-                            flierprops=dict(markeredgecolor='#000000'),
-                            medianprops=dict(color="#000000", linewidth=2),
-                            whiskerprops=dict(color="#000000"),
-                            capprops=dict(color="#000000"),
-                            zorder=2,
-                            widths=0.7
-                            )
+        self.ax.boxplot(self.race_not_completed_laps,
+                        patch_artist=True,
+                        boxprops=dict(facecolor="#6F6F6F", color="#000000"),
+                        flierprops=dict(markeredgecolor='#000000'),
+                        medianprops=dict(color="#000000", linewidth=2),
+                        whiskerprops=dict(color="#000000"),
+                        capprops=dict(color="#000000"),
+                        zorder=2,
+                        widths=0.7
+                        )
 
     def draw_medianLine(self):
 
@@ -111,7 +112,6 @@ class BoxplotMulti(Base):
             pass
 
         plt.plot(x1, y1, zorder=3, linestyle="dashed", color="#C2C5CA")
-
 
     def calculateYMaxMin(self, lapdata, roundBase):
 
@@ -196,5 +196,3 @@ class BoxplotMulti(Base):
             showMean = False
 
         return ymin, ymax, interval, showMean, showMedianLine
-
-
