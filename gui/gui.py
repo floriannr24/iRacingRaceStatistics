@@ -1,9 +1,13 @@
 import tkinter as tk
+import datetime
+from time import tzname
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from data.recent_races import RecentRaces
 from helpers.diagram import Diagram, Configurator
 from sessionbuilder.session_builder import SessionBuilder
+import pytz
+from iso3166 import countries
 
 
 class GUI(tk.Frame):
@@ -11,6 +15,9 @@ class GUI(tk.Frame):
         tk.Frame.__init__(self, root, *args, **kwargs)
         self.root = root
         self.window_height = None
+
+        # init timeinfo
+        self.timeinfo = Timeinfo()
 
         # init session
         my_sessionBuilder = SessionBuilder()
@@ -31,26 +38,112 @@ class GUI(tk.Frame):
         self.bottom.pack(side="bottom")
 
         self.root.update_idletasks()
-
         self.window_height = self.root.winfo_height() + 1  # small adjustment so there is no pixelline left
+
+
+class Timeinfo:
+    def __init__(self):
+        self.getCountryData()
+
+    def getCountryData(self):
+
+        tzList = []
+        for c in countries:
+            dict = {}
+            dict["country"] = c[0]
+            dict["country_code"] = c[1]
+            try:
+                tzint = []
+                for tz in pytz.country_timezones[c[1]]:
+                    td = self.calcTimeDifference(tz)
+                    tzint.append(f"(UTC {td}) {tz}")
+                dict["timezones"] = tzint
+            except KeyError:
+                continue
+            tzList.append(dict)
+        return tzList
+
+    def calcTimeDifference(self, tz):
+        tz1 = pytz.timezone("UTC")
+        tz2 = pytz.timezone(tz)
+        time1 = tz1.localize(datetime.datetime.now())
+        time2 = tz2.localize(datetime.datetime.now())
+        duration = (time1 - time2).total_seconds()
+        td = divmod(duration, 3600)[0]
+
+        if td >= 0:
+            td = "+"+str(td)+"0"
+        else:
+            td = str(td)+"0"
+
+        if len(td) < 6:
+            td = td[0:1] + "0" + td[1:]
+
+        td = td.replace(".", ":")
+
+        return td
+
+    def convertToTimezone(self, string, timezone):
+        time = datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%SZ')
+        utc = time.replace(tzinfo=pytz.UTC)
+        dt_tz = utc.astimezone(pytz.timezone(timezone))
+        return dt_tz.strftime('%Y-%m-%d  %H:%M:%S')
+
 
 class Menubar:
     def __init__(self, parent):
         self.parent = parent
         self.parent.root.option_add('*tearOff', False)
+        self.window_settings = None
 
         menubar = tk.Menu(self.parent.root)
         self.parent.root.config(menu=menubar)
-        file_menu = tk.Menu(menubar)
 
-        menubar.add_cascade(
+        menubar.add_command(
             label="Settings",
-            menu=file_menu,
             command=self.open_settings
         )
 
     def open_settings(self):
-        pass
+        self.window_settings = Settings(self.parent)
+        self.window_settings.geometry("300x300")
+        self.window_settings.propagate(False)
+
+
+class Settings(tk.Toplevel):
+    def __init__(self, root):
+        super().__init__(root)
+        self.countryData = None
+        self.root = root
+        self.location = None
+
+        location_label = tk.Label(self, text="Location:")
+        location_label.grid(column=0, row=0)
+
+        self.location_combo = ttk.Combobox(self, state="readonly", width=30)
+        self.location_combo.config(validate="focus", validatecommand=self.insertTimezones)
+        self.location_combo.grid(column=1, row=0)
+        self.location_combo["values"] = self.insertCountries()
+
+        timezone_label = tk.Label(self, text="Timezone:")
+        timezone_label.grid(column=0, row=1)
+
+        self.timezone_combo = ttk.Combobox(self, state="readonly", width=30)
+        self.timezone_combo.grid(column=1, row=1)
+        self.timezone_combo["state"] = "readonly"
+
+        self.insertTimezones()
+
+    def insertCountries(self):
+        self.countryData = self.root.timeinfo.getCountryData()
+        return [f"{c['country']}" for c in self.countryData]
+
+    def insertTimezones(self):
+        for cd in self.countryData:
+            if cd["country"] == self.location_combo.get():
+                self.timezone_combo["values"] = cd["timezones"]
+                self.timezone_combo.current(0)
+        return True
 
 
 class Top(tk.Frame):
@@ -109,13 +202,14 @@ class Top(tk.Frame):
     def fillTree(self, fetchFromCache):
         tree_data = RecentRaces(self.session).get_RecentRaces_Data(fetchFromCache)
 
-        tree_values = []
+        for data in tree_data:
+            data['session_start_time'] = self.parent.timeinfo.convertToTimezone(data['session_start_time'],
+                                                                                'Europe/Berlin')
 
-        for x in tree_data:
-            tree_values.append(
-                (f"{x['session_start_time']}", f"{x['series_name']}", f"{x['track_name']}", f"{x['start_position']}",
-                 f"{x['finish_position']}", f"{x['winner_name']}", f"{x['SOF']}", f"{x['subsession_id']}")
-            )
+        tree_values = [
+            (f"{x['session_start_time']}", f"{x['series_name']}", f"{x['track_name']}", f"{x['start_position']}",
+             f"{x['finish_position']}", f"{x['winner_name']}", f"{x['SOF']}", f"{x['subsession_id']}")
+            for x in tree_data]
 
         for data in tree_values:
             self.tree.insert("", tk.END, values=data)
@@ -194,7 +288,8 @@ class Tab_BPM(tk.Frame):
         sep1 = ttk.Separator(self, orient="vertical")
         sep1.grid(column=1, row=0, rowspan=7, sticky="ns", padx=(0, 20))
 
-        self.setYMinMax_cb = ttk.Checkbutton(self, text="Set y-axis:", variable=self.setYMinMax_val, command=self.activate_yminymax)
+        self.setYMinMax_cb = ttk.Checkbutton(self, text="Set y-axis:", variable=self.setYMinMax_val,
+                                             command=self.activate_yminymax)
         self.setYMinMax_cb.grid(column=2, row=1, sticky="w")
         self.ymin_entry = ttk.Entry(self, width=8)
         self.ymin_entry.grid(column=3, row=1, sticky="w")
