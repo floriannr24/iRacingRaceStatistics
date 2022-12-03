@@ -1,5 +1,5 @@
 from data.laps_multi import LapsMulti
-from data.results_multi import results_multi
+from data.results_multi import ResultsMulti
 
 
 class DataProcessor:
@@ -13,7 +13,7 @@ class DataProcessor:
 
         # get session data from iRacingAPI + FuzzwahAPI
         self.iRacing_lapdata = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
-        self.iRacing_results = results_multi(self.subsession_id, self.session).requestResultsMulti()
+        self.iRacing_results = ResultsMulti(self.subsession_id, self.session).requestResultsMulti()
 
         carclass_id = self.gen_searchUsersCarClass(name)  # search carclass id of user
         iRacing_lapdata_carclass, iRacing_results_carclass = self.gen_filterByCarClass(carclass_id)  # get only data for corresponding carclass
@@ -43,17 +43,18 @@ class DataProcessor:
     def get_Delta_Data(self, beforeDrivers, afterDrivers):
 
         # get session data from iRacingAPI + FuzzwahAPI
+        self.iRacing_results = ResultsMulti(self.subsession_id, self.session).requestResultsMulti()
         self.iRacing_lapdata = LapsMulti(self.subsession_id, self.session).requestLapsMulti()
 
         carclass_id = self.gen_searchUsersCarClass("Florian Niedermeier2")  # search carclass id of user
         iRacingData_carclass, fuzzData_carclass = self.gen_filterByCarClass(carclass_id)  # get only data for corresponding carclass
         unique_drivers = self.gen_findUniqueDrivers(iRacingData_carclass)  # find unique drivers in said carclass
 
-        output_data = self.delta_collectInfo(iRacingData_carclass, unique_drivers)  # collect info in dictionary
-        output_data = self.gen_sortDictionary(output_data)  # sort dictionary by "laps completed" and "finish position"
-        output_data = self.delta_find_DISQ_DISC(output_data)  # find DISQ / DISC drivers and append them to the end of the dictionary
+        output = self.delta_collectInfo(iRacingData_carclass, unique_drivers)  # collect info in dictionary
+        output = self.gen_sortDictionary(output)  # sort dictionary by "laps completed" and "finish position"
+        output = self.delta_find_DISQ_DISC(output)  # find DISQ / DISC drivers and append them to the end of the dictionary
         # output_data = self.delta_filterDrivers(output_data, beforeDrivers, afterDrivers)
-        output = self.delta_calcDelta(output_data)  # calculate delta time to first and add to dictionary
+        output = self.delta_calcDelta(output)  # calculate delta time to first and add to dictionary
 
         return output
 
@@ -63,7 +64,7 @@ class DataProcessor:
 
         for i, id in enumerate(self.subsession_id):
             irData = LapsMulti(id, self.session).requestLapsMulti()
-            metaData = results_multi(id, self.session).requestResultsMulti()
+            metaData = ResultsMulti(id, self.session).requestResultsMulti()
 
             output = self.pace_collectInfo(irData, name)
             output = self.gen_scanForInvalidTypes(output, -1, None)
@@ -315,8 +316,8 @@ class DataProcessor:
                 "finish_position": None,
                 "session_time": sessionTime,
                 "delta": delta
-
             }
+
             lapsDict.append(intDict)
 
             # add "finish_position", "laps_completed" to intDict{} via requestLapsMulti()
@@ -332,9 +333,9 @@ class DataProcessor:
 
             # add "Running", "Disq" or "Disconnected" to intDict{} via FuzzwahAPI
             # add "carId" to intDict{} via FuzzwahAPI
-            for fuzz in self.iRacing_results:
-                if driver == fuzz["name"]:
-                    intDict["result_status"] = fuzz["out"]
+            for result in self.iRacing_results["session_results"][2]["results"]:
+                if driver == result["display_name"]:
+                    intDict["result_status"] = result["reason_out"]
 
         return lapsDict
 

@@ -2,7 +2,7 @@ import json
 import requests
 
 
-class results_multi:
+class ResultsMulti:
     def __init__(self, subsession_id, session):
         self.subsession_id = subsession_id
         self.session = session
