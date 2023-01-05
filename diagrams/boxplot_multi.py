@@ -11,6 +11,7 @@ from diagrams.base import Base
 class BoxplotMulti(Base):
     def __init__(self, input, config):
         # init
+        self.boxplot = None
         self.race_completed_laps = input[0]
         self.race_not_completed_laps = input[1]
         self.drivers_raw = input[2]
@@ -23,21 +24,8 @@ class BoxplotMulti(Base):
 
     def draw(self, name, options):
 
-        xmin = 0
-        xmax = self.number_Of_Drivers + 1
-
-        self.ax.boxplot(self.race_completed_laps,
-                        patch_artist=True,
-                        boxprops=dict(facecolor="#0084F2", color="#000000"),
-                        flierprops=dict(markeredgecolor='#000000'),
-                        medianprops=dict(color="#000000", linewidth=2),
-                        whiskerprops=dict(color="#000000"),
-                        capprops=dict(color="#000000"),
-                        zorder=2,
-                        widths=0.7,
-                        showmeans=self.showMean,
-                        meanprops=dict(marker="o", markerfacecolor="red", fillstyle="full", markeredgecolor="None")
-                        )
+        self.draw_boxplot()
+        self.format(options, name)
 
         if options.get("showLaptimes") == 1:
             self.draw_laptimes()
@@ -48,13 +36,6 @@ class BoxplotMulti(Base):
         if self.showMedianLine:
             self.draw_medianLine()
 
-        # formatting
-        number_of_seconds_shown = np.arange(self.ymin, self.ymax + self.interval, self.interval)
-
-        self.ax.set(xlim=(xmin, xmax), ylim=(self.ymin, self.ymax))
-        self.ax.set_yticks(number_of_seconds_shown)
-        self.ax.set_yticklabels(self.calculateMinutesYAxis(number_of_seconds_shown))
-
         if options.get("showDISC") == 0:
             self.ax.set_xticks(np.arange(1, self.number_Of_Drivers + 1))
             self.ax.set_xticklabels(self.drivers_raw, rotation=45, rotation_mode="anchor", ha="right")
@@ -63,13 +44,53 @@ class BoxplotMulti(Base):
             self.ax.set_xticklabels(self.drivers_raw, rotation=45, rotation_mode="anchor", ha="right")
 
         try:
-            index = self.drivers_raw.index(name)
-            self.ax.get_xticklabels()[index].set_fontweight("bold")
+            self.drivername_bold(name)
+            self.userBoxplot_brightBlue(name)
         except ValueError:
             pass
 
         plt.tight_layout()
         plt.show()
+
+    def userBoxplot_brightBlue(self, name):
+        index = self.drivers_raw.index(name)
+        userBP = self.boxplot["boxes"][index]
+        userBP.set_facecolor("#90C6F0")
+
+    def drivername_bold(self, name):
+        index = self.drivers_raw.index(name)
+        userBP = self.ax.get_xticklabels()[index]
+        userBP.set_fontweight("bold")
+
+    def draw_boxplot(self):
+
+        self.boxplot = self.ax.boxplot(self.race_completed_laps,
+                                       patch_artist=True,
+                                       boxprops=dict(facecolor="#0084F2", color="#000000"),
+                                       flierprops=dict(markeredgecolor='#000000'),
+                                       medianprops=dict(color="#000000"),
+                                       whiskerprops=dict(color="#000000"),
+                                       capprops=dict(color="#000000"),
+                                       zorder=2,
+                                       widths=0.7,
+                                       showmeans=self.showMean,
+                                       meanprops=dict(marker="o", markerfacecolor="red", fillstyle="full",
+                                                      markeredgecolor="None")
+                                       )
+
+    def format(self, options, name):
+
+        try:
+            if options.get("setYAxis") == 0:
+                self.calculateYMaxMin(name)
+        except ValueError:
+            self.ymin = 0
+            self.ymax = 150
+
+        number_of_seconds_shown = np.arange(self.ymin, self.ymax + self.interval, self.interval)
+        self.ax.set(xlim=(0, self.number_Of_Drivers + 1), ylim=(self.ymin, self.ymax))
+        self.ax.set_yticks(number_of_seconds_shown)
+        self.ax.set_yticklabels(self.calculateMinutesYAxis(number_of_seconds_shown))
 
     def draw_laptimes(self):
         scatter = []
@@ -113,42 +134,10 @@ class BoxplotMulti(Base):
 
         plt.plot(x1, y1, zorder=3, linestyle="dashed", color="#C2C5CA")
 
-    def calculateYMaxMin(self, lapdata, roundBase):
-
-        result = []
-        tempMax = []
-        tempMin = []
-
-        for laps in lapdata:
-
-            if not laps:
-                continue
-
-            Q1, Q3 = np.percentile(laps, [25, 75])
-            IQR = Q3 - Q1
-
-            loval = Q1 - 1.5 * IQR
-            hival = Q3 + 1.5 * IQR
-
-            # find closest real laptime value compared to hival/loval
-            candidates_for_top_border = max([item for item in laps if item < hival])
-            tempMax.append(candidates_for_top_border)
-            tempMin.append(min(laps, key=lambda x: abs(x - loval)))
-
-        maxVal = max(tempMax)  # top border
-        minVal = min(tempMin)  # bottom border
-
-        # round min to the nearest base (= roundBase; 0.5)
-        minVal_test = roundBase * round(minVal / roundBase)
-
-        # if minVal has been rounded up, round down 0.5
-        if minVal_test > minVal:
-            minval_final = minVal_test - 0.5
-            result.append(minval_final)
-        else:
-            result.append(minVal_test)
-        result.append(roundBase * round(maxVal / roundBase))
-        return result
+    def calculateYMaxMin(self, name):
+        index = self.drivers_raw.index(name) * 2
+        self.ymin = round(self.boxplot["caps"][0].get_ydata()[0], 0) - 1
+        self.ymax = round(self.boxplot["caps"][index + 1].get_ydata()[0], 0) + 4
 
     def calculateMinutesYAxis(self, number_of_seconds_shown):
 
@@ -171,9 +160,7 @@ class BoxplotMulti(Base):
             ymin = options.get("minVal")
             ymax = options.get("maxVal")
         else:
-            maxmin = self.calculateYMaxMin(self.race_completed_laps, 0.5)
-            ymax = maxmin[1]
-            ymin = maxmin[0]
+            ymin, ymax = None, None
 
         if options.get("setYAxisInterval") == 1:
             interval = options.get("interval")

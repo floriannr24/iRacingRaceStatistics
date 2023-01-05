@@ -57,7 +57,7 @@ class RecentRaces:
         return self.iRacingData
 
     def cache_load(self):
-        fileAPI = open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
+        fileAPI = open("C:/Users/FSX-P/IdeaProjects/iRacing_RaceStatistics/data/cache/" + str(
             self.cust_id) + "_member_recent_races.json")
         APIFile = json.load(fileAPI)
         fileAPI.close()
@@ -67,7 +67,7 @@ class RecentRaces:
         return APIFile
 
     def cache_save(self):
-        with open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
+        with open("C:/Users/FSX-P/IdeaProjects/iRacing_RaceStatistics/data/cache/" + str(
                 self.cust_id) + "_member_recent_races.json", "w") as a:
             json.dump(self.iRacingData, a, indent=2)
 

@@ -14,7 +14,7 @@ class GUI(tk.Frame):
     def __init__(self, root, *args, **kwargs):
         tk.Frame.__init__(self, root, *args, **kwargs)
         self.root = root
-        self.window_height = None
+        self.window_width = None
 
         # init timeinfo
         self.timeinfo = Timeinfo()
@@ -29,17 +29,17 @@ class GUI(tk.Frame):
         self.menubar = Menubar(self)
 
         # init frames
-        self.canvas = Canvas(self)
-        self.canvas.pack(side="right")
-
         self.top = Top(self)
-        self.top.pack(side="top")
+        self.top.pack()
 
         self.bottom = Bottom(self)
-        self.bottom.pack(side="bottom")
+        self.bottom.pack()
+
+        self.canvas = Canvas(self)
+        self.canvas.pack(side="bottom")
 
         self.root.update_idletasks()
-        self.window_height = self.root.winfo_height() + 1  # small adjustment so there is no pixelline left
+        self.window_width = self.root.winfo_width()
 
     def loadTimzeone(self):
         try:
@@ -292,7 +292,7 @@ class Top(tk.Frame):
 
 class Canvas(tk.Frame):
     def __init__(self, parent):
-        super().__init__(width=400)
+        super().__init__(height=500)
         self.parent = parent
         self.canvas = None
 
@@ -458,8 +458,8 @@ class Tab_BPM(tk.Frame):
                             showLaptimes=self.dots_val.get(),
                             showMedianLine=self.median_line_val.get(),
                             showMean=self.mean_val.get(),
-                            px_width=500,
-                            px_height=self.top.parent.window_height
+                            px_width=self.top.parent.window_width,
+                            px_height=500
                             )
 
 

@@ -40,7 +40,7 @@ class ResultsMulti:
         return self.iRacingData
 
     def cache_load(self):
-        fileAPI = open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
+        fileAPI = open("C:/Users/FSX-P/IdeaProjects/iRacing_RaceStatistics/data/cache/" + str(
             self.subsession_id) + "_results_multi.json")
         APIFile = json.load(fileAPI)
         fileAPI.close()
@@ -50,7 +50,7 @@ class ResultsMulti:
         return APIFile
 
     def cache_save(self):
-        with open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/data/cache/" + str(
+        with open("C:/Users/FSX-P/IdeaProjects/iRacing_RaceStatistics/data/cache/" + str(
                 self.subsession_id) + "_results_multi.json", "w") as a:
             json.dump(self.iRacingData, a, indent=2)
 

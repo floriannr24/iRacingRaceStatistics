@@ -13,7 +13,7 @@ class SessionBuilder:
 
     def getCredentials(self):
         return json.load(
-            open("C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/sessionbuilder/files/credentials.json"))
+            open("C:/Users/FSX-P/IdeaProjects/iRacing_RaceStatistics/sessionbuilder/files/credentials.json"))
 
     def encode_pw(self):
         username = self.credentials["email"]
@@ -29,7 +29,7 @@ class SessionBuilder:
         authBody = {"email": self.credentials["email"], "password": self.encode_pw()}
 
         self.session = requests.Session()
-        cookie_File = "C:/Users/FSX-P/IdeaProjects/iRacingRaceStatistics/sessionbuilder/files/cookie-jar.txt"
+        cookie_File = "C:/Users/FSX-P/IdeaProjects/iRacing_RaceStatistics/sessionbuilder/files/cookie-jar.txt"
         self.session.cookies = LWPCookieJar(cookie_File)
 
         if os.path.exists(cookie_File):
