@@ -137,7 +137,7 @@ class BoxplotMulti(Base):
     def calculateYMaxMin(self, name):
         index = self.drivers_raw.index(name) * 2
         self.ymin = round(self.boxplot["caps"][0].get_ydata()[0], 0) - 1
-        self.ymax = round(self.boxplot["caps"][index + 1].get_ydata()[0], 0) + 4
+        self.ymax = round(self.boxplot["caps"][index + 1].get_ydata()[0], 0) + 2
 
     def calculateMinutesYAxis(self, number_of_seconds_shown):
 

@@ -10,10 +10,10 @@ class Driver:
         self.requestDriver(session)
 
     def requestDriver(self, session):
-        responseJson = session.get('https://members-ng.iracing.com/data/lookup/drivers', params={"search_term": self.display_name})
-        responseDict = responseJson.json()
-        finalJson = requests.get(responseDict["link"])
-        finalDict = finalJson.json()[0]
+        response = session.get('https://members-ng.iracing.com/data/lookup/drivers', params={"search_term": self.display_name})
+        response = response.json()
+        response = requests.get(response["link"])
+        response = response.json()[0]
 
-        self.cust_id = finalDict["cust_id"]
-        self.licenses = finalDict["licenses"]
+        self.cust_id = response["cust_id"]
+        self.licenses = response["licenses"]
