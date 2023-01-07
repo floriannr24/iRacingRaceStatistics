@@ -466,8 +466,3 @@ class Tab_BPM(tk.Frame):
 class Tab_DELTA(tk.Frame):
     def __init__(self, parent):
         super().__init__()
-
-
-root = tk.Tk()
-GUI(root).pack(side="top", fill="both", expand=True)
-root.mainloop()
